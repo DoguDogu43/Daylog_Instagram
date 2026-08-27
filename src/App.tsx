@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { RoutineNotebook } from './RoutineNotebook'
 import {
   changeAreaOptions,
   dailyRhythmOptions,
@@ -7,7 +6,6 @@ import {
   pastPatternOptions,
   preferredDayOptions,
   preferredPeriodOptions,
-  togetherStyleOptions,
 } from './data'
 import type {
   ApiResult,
@@ -20,14 +18,13 @@ import type {
   PastPattern,
   PreferredDay,
   PreferredPeriod,
-  TogetherStyle,
   View,
 } from './types'
 import './App.css'
 
-const FORM_VERSION = '2026.08.5'
+const FORM_VERSION = '2026.08.6'
 const SCHEMA_VERSION = 'daylog-life-session-v1'
-const ANSWERS_STORAGE_KEY = 'daylog-life-session-answers-v5'
+const ANSWERS_STORAGE_KEY = 'daylog-life-session-answers-v6'
 
 const initialAnswers: ApplicationAnswers = {
   changeAreas: [],
@@ -47,43 +44,35 @@ const initialContact: ContactDetails = {
 const questionMeta = [
   {
     step: '01',
-    label: '하루 리듬',
-    shortTitle: '리듬 기록',
-    title: '요즘 하루는 어떤 리듬으로 흘러가나요?',
-    description: '가장 가깝게 느껴지는 하루의 패턴을 골라주세요. 첫 만남에서 함께 나눌 하루 초안의 첫 줄로 기록됩니다.',
+    label: '나의 리듬',
+    shortTitle: '하루 리듬',
+    title: '요즘 나의 하루는 어떤 리듬으로 흘러가나요?',
+    description: '가장 편안하게 느껴지는 하루의 흐름을 골라주세요. 코치와 함께 펼쳐볼 나의 하루 노트 첫 장에 기록됩니다.',
     stage: 'daily_rhythm_selected',
   },
   {
     step: '02',
     label: '하루의 온도',
-    shortTitle: '에너지 시간',
-    title: '하루 중 가장 편안한 시간과 버거운 시간은 언제인가요?',
-    description: '에너지가 살아나 몰입하기 좋은 시간과, 에너지가 가라앉아 지치는 두 시간을 각각 골라주세요.',
+    shortTitle: '에너지 순간',
+    title: '하루 중 내가 가장 활력 있는 순간과 지치는 순간은 언제인가요?',
+    description: '에너지가 기분 좋게 차오르는 순간과, 유독 지치고 버거운 순간을 각각 자유롭게 적어주세요.',
     stage: 'energy_selected',
   },
   {
     step: '03',
     label: '지속의 조건',
     shortTitle: '지속 조건',
-    title: '무언가를 오래 이어가 본 적이 있나요?',
-    description: '성취의 크기보다 그것을 지속하게 만들어주었던 나만의 조건을 떠올려보세요.',
+    title: '내가 무언가를 기분 좋게 오래 이어갔던 순간은 언제인가요?',
+    description: '성취의 크기보다 나를 계속 움직이게 만들어주었던 나만의 지속 조건을 떠올려보세요.',
     stage: 'past_pattern_selected',
   },
   {
     step: '04',
-    label: '바꿀 습관',
+    label: '돌볼 습관',
     shortTitle: '습관 영역',
-    title: '지금 가장 먼저 바꾸고 싶은 생활 영역은 어디인가요?',
-    description: '1~3개를 선택한 뒤, 첫 번째 1:1 세션에서 집중할 1순위 영역을 정해주세요.',
+    title: '지금 나의 일상에서 가장 먼저 돌보고 싶은 습관은 무엇인가요?',
+    description: '1~3개를 선택한 뒤, 첫 번째 1:1 라이프 세션에서 가장 깊이 다룰 1순위 영역을 지정해주세요.',
     stage: 'change_area_selected',
-  },
-  {
-    step: '05',
-    label: '동행 방식',
-    shortTitle: '동행 페이스',
-    title: '어떤 방식이면 조금 더 오래 이어갈 수 있을까요?',
-    description: '당신에게 가장 편안하고 실질적인 동행 방식을 골라주세요.',
-    stage: 'together_style_selected',
   },
 ] as const
 
@@ -174,7 +163,6 @@ function App() {
     Boolean(answers.comfortableTime?.trim() && answers.difficultTime?.trim()),
     answers.pastPattern !== undefined,
     answers.primaryChangeArea !== undefined,
-    answers.togetherStyle !== undefined,
   ].filter(Boolean).length
 
   function goToView(nextView: View, direction: 'forward' | 'backward' = 'forward') {
@@ -214,12 +202,11 @@ function App() {
   function validateQuestion(index: number) {
     if (index === 0 && !answers.dailyRhythm) return '지금의 하루와 가장 가까운 리듬을 골라주세요.'
     if (index === 1 && (!answers.comfortableTime?.trim() || !answers.difficultTime?.trim())) {
-      return '가장 편안한 순간과 버거운 순간을 각각 적어주세요.'
+      return '활력을 얻는 순간과 지치는 순간을 각각 적어주세요.'
     }
     if (index === 2 && !answers.pastPattern) return '나에게 가장 가까운 지속 방식을 골라주세요.'
-    if (index === 3 && answers.changeAreas.length === 0) return '바꾸고 싶은 영역을 최소 1개 이상 골라주세요.'
+    if (index === 3 && answers.changeAreas.length === 0) return '돌보고 싶은 습관 영역을 최소 1개 이상 골라주세요.'
     if (index === 3 && !answers.primaryChangeArea) return '가장 먼저 집중할 1순위 영역을 정해주세요.'
-    if (index === 4 && !answers.togetherStyle) return '원하는 함께하기 방식을 골라주세요.'
     return ''
   }
 
@@ -234,16 +221,15 @@ function App() {
     setError('')
     track(questionMeta[view.index].stage)
     if (view.index === questionMeta.length - 1) {
-      goToView({ kind: 'summary' }, 'forward')
-      track('life_note_viewed')
+      goToView({ kind: 'contact' }, 'forward')
+      track('application_started')
       return
     }
     goToView({ kind: 'question', index: view.index + 1 }, 'forward')
   }
 
   function goBack() {
-    if (view.kind === 'contact') return goToView({ kind: 'summary' }, 'backward')
-    if (view.kind === 'summary') return goToView({ kind: 'question', index: 4 }, 'backward')
+    if (view.kind === 'contact') return goToView({ kind: 'question', index: questionMeta.length - 1 }, 'backward')
     if (view.kind === 'question' && view.index > 0) {
       return goToView({ kind: 'question', index: view.index - 1 }, 'backward')
     }
@@ -272,11 +258,6 @@ function App() {
           : undefined
       return { ...current, changeAreas: next, primaryChangeArea }
     })
-  }
-
-  function openContact() {
-    goToView({ kind: 'contact' }, 'forward')
-    track('application_started')
   }
 
   async function submitApplication(event: FormEvent<HTMLFormElement>) {
@@ -394,14 +375,14 @@ function App() {
       return (
         <div className="spiral-time-write-section">
           <div className="time-write-cards-container">
-            {/* ☀️ 가장 편안한 시간·순간 */}
+            {/* ☀️ 내가 활력을 얻는 순간 */}
             <div className={`time-write-card time-card--comfort ${answers.comfortableTime?.trim() ? 'is-filled' : ''}`}>
               <div className="time-write-header">
                 <div className="time-write-title-wrap">
                   <span className="time-write-icon" aria-hidden="true">☀️</span>
                   <div>
-                    <strong className="time-write-title">가장 편안하거나 활력 있는 시간·순간</strong>
-                    <span className="time-write-subtitle">에너지가 차오르고 기분 좋게 몰입되는 때를 자유롭게 적어주세요.</span>
+                    <strong className="time-write-title">내가 가장 편안하거나 활력을 얻는 순간</strong>
+                    <span className="time-write-subtitle">하루 중 에너지가 차오르고 기분 좋게 몰입되는 때를 적어주세요.</span>
                   </div>
                 </div>
               </div>
@@ -432,14 +413,14 @@ function App() {
               </div>
             </div>
 
-            {/* 🌙 가장 버거운 시간·순간 */}
+            {/* 🌙 내가 가장 지치는 순간 */}
             <div className={`time-write-card time-card--difficult ${answers.difficultTime?.trim() ? 'is-filled' : ''}`}>
               <div className="time-write-header">
                 <div className="time-write-title-wrap">
                   <span className="time-write-icon" aria-hidden="true">🌙</span>
                   <div>
-                    <strong className="time-write-title">가장 버겁거나 지치는 시간·순간</strong>
-                    <span className="time-write-subtitle">에너지가 떨어지거나 일과가 지치는 때를 자유롭게 적어주세요.</span>
+                    <strong className="time-write-title">내가 가장 버겁거나 지치는 순간</strong>
+                    <span className="time-write-subtitle">하루 중 에너지가 가라앉거나 일과에 지치는 때를 적어주세요.</span>
                   </div>
                 </div>
               </div>
@@ -485,7 +466,7 @@ function App() {
         <div className="spiral-habit-section">
           <div className="habit-header-bar">
             <span className="habit-count-tag">
-              선택된 습관 영역: <strong>{answers.changeAreas.length} / 3개</strong> (1~3개 선택 가능)
+              선택한 습관 영역: <strong>{answers.changeAreas.length} / 3개</strong> (1~3개 선택 가능)
             </span>
           </div>
 
@@ -522,7 +503,7 @@ function App() {
               <div className="priority-panel-header">
                 <span className="priority-pin-emoji" aria-hidden="true">📌</span>
                 <div>
-                  <strong className="priority-panel-title">그중 첫 번째 세션에서 가장 먼저 다룰 1순위는?</strong>
+                  <strong className="priority-panel-title">그중 첫 번째 세션에서 가장 먼저 돌보고 싶은 1순위는?</strong>
                   <p className="priority-panel-subtitle">선택하신 {answers.changeAreas.length}개 영역 중 가장 깊이 다루고 싶은 주제를 1개 지정해주세요.</p>
                 </div>
               </div>
@@ -550,9 +531,6 @@ function App() {
       )
     }
 
-    return renderChoiceCards<TogetherStyle>(togetherStyleOptions, answers.togetherStyle, (value) => {
-      chooseSingle('togetherStyle', value)
-    })
   }
 
   // Spiral ring coils for authentic notebook top header
@@ -566,15 +544,12 @@ function App() {
     { id: 'q1', label: '02 온도', isUnlocked: filledCount >= 1 || (view.kind === 'question' && view.index >= 1), targetView: { kind: 'question' as const, index: 1 } },
     { id: 'q2', label: '03 지속', isUnlocked: filledCount >= 2 || (view.kind === 'question' && view.index >= 2), targetView: { kind: 'question' as const, index: 2 } },
     { id: 'q3', label: '04 습관', isUnlocked: filledCount >= 3 || (view.kind === 'question' && view.index >= 3), targetView: { kind: 'question' as const, index: 3 } },
-    { id: 'q4', label: '05 동행', isUnlocked: filledCount >= 4 || (view.kind === 'question' && view.index >= 4), targetView: { kind: 'question' as const, index: 4 } },
-    { id: 'summary', label: '초안', isUnlocked: filledCount === 5, targetView: { kind: 'summary' as const } },
-    { id: 'contact', label: '신청', isUnlocked: filledCount === 5, targetView: { kind: 'contact' as const } },
+    { id: 'contact', label: '신청', isUnlocked: filledCount >= 4 || view.kind === 'contact', targetView: { kind: 'contact' as const } },
   ]
 
   function isTabActive(tabId: string) {
     if (view.kind === 'intro') return tabId === 'intro'
     if (view.kind === 'question') return tabId === `q${view.index}`
-    if (view.kind === 'summary') return tabId === 'summary'
     if (view.kind === 'contact') return tabId === 'contact'
     return false
   }
@@ -655,33 +630,8 @@ function App() {
                   <mark className="highlighter-text">하루를 설계해볼게요.</mark>
                 </h1>
                 <p className="intro-sub-lead">
-                  완벽한 계획표가 아니어도 괜찮아요. 요즘의 리듬, 가장 편안한 시간, 바꾸고 싶은 생활 습관을 하나씩 짚어가며 나만의 하루 노트를 완성합니다.
+                  완벽한 계획표가 아니어도 괜찮아요. 요즘의 리듬, 내가 편안한 순간, 가장 먼저 돌보고 싶은 생활 습관을 하나씩 짚어가며 나만의 하루 노트를 완성합니다.
                 </p>
-              </div>
-
-              {/* 3 Process Steps */}
-              <div className="intro-process-card">
-                <div className="process-step-item">
-                  <span className="process-step-tag">01~02</span>
-                  <div className="process-step-detail">
-                    <strong>하루 리듬 & 에너지 흐름 기록</strong>
-                    <p>내가 가장 활력 있는 시간과 지치는 순간을 파악합니다.</p>
-                  </div>
-                </div>
-                <div className="process-step-item">
-                  <span className="process-step-tag">03~05</span>
-                  <div className="process-step-detail">
-                    <strong>지속 조건과 1순위 습관 영역 탐색</strong>
-                    <p>수면, 식사, 운동 등 가장 먼저 다룰 영역을 정합니다.</p>
-                  </div>
-                </div>
-                <div className="process-step-item">
-                  <span className="process-step-tag">완성</span>
-                  <div className="process-step-detail">
-                    <strong>나만의 하루 초안 완성</strong>
-                    <p>작성된 하루 기록을 바탕으로 맞춤 루틴 설계를 신청합니다.</p>
-                  </div>
-                </div>
               </div>
 
               {/* Intro CTA */}
@@ -699,19 +649,6 @@ function App() {
              ========================================================================= */}
           {view.kind === 'question' && (
             <div className="notebook-page-content question-page">
-              {/* Top Step Progress Bar */}
-              <div className="question-page-header">
-                <div className="question-step-stamp">
-                  <span className="stamp-icon" aria-hidden="true">PAGE</span>
-                  <strong>0{view.index + 1} / 05</strong>
-                  <span className="stamp-sep">·</span>
-                  <span className="stamp-label">{questionMeta[view.index].label}</span>
-                </div>
-                <div className="question-progress-track" aria-label={`5개 중 ${view.index + 1}단계 진행 중`}>
-                  <div className="question-progress-fill" style={{ width: `${((view.index + 1) / 5) * 100}%` }} />
-                </div>
-              </div>
-
               {/* Question Heading Group */}
               <div className="question-title-wrap">
                 <h1 id="question-title" ref={headingRef} tabIndex={-1} className="question-heading">
@@ -747,31 +684,6 @@ function App() {
                   </span>
                   <span className="btn-circle-arrow" aria-hidden="true">→</span>
                 </button>
-              </div>
-            </div>
-          )}
-
-          {/* =========================================================================
-              VIEW: SUMMARY (나의 하루 초안 - LIFE NOTE)
-             ========================================================================= */}
-          {view.kind === 'summary' && (
-            <div className="notebook-page-content summary-page">
-              <RoutineNotebook
-                answers={answers}
-                onEditStep={(step) => goToView({ kind: 'question', index: step }, 'backward')}
-              />
-
-              <div className="summary-bottom-actions">
-                <button className="notebook-secondary-btn" onClick={goBack} type="button">
-                  ← 답변 다시 수정
-                </button>
-                <div className="summary-cta-group">
-                  <button className="notebook-primary-btn" onClick={openContact} type="button">
-                    <span className="btn-label-text">1:1 세션 신청서 작성하기</span>
-                    <span className="btn-circle-arrow" aria-hidden="true">→</span>
-                  </button>
-                  <small className="summary-cta-hint">다음 단계에서 이름과 연락처를 남겨주시면 신청이 완료됩니다.</small>
-                </div>
               </div>
             </div>
           )}

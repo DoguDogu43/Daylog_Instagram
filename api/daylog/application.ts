@@ -64,7 +64,7 @@ function cleanApplication(payload: Record<string, unknown>) {
     pastPattern: enumValue(payload.pastPattern, PAST_PATTERNS, '지속 방식'),
     changeAreas,
     primaryChangeArea,
-    togetherStyle: enumValue(payload.togetherStyle, TOGETHER_STYLES, '함께하는 방식'),
+    togetherStyle: payload.togetherStyle ? enumValue(payload.togetherStyle, TOGETHER_STYLES, '함께하는 방식') : '',
     displayName: text(payload.displayName, '이름·호칭', 1, 50),
     contactMethod,
     contactValue,

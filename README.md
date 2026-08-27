@@ -23,3 +23,11 @@ npm run build
 필요한 변수 이름은 `.env.example`을 확인합니다. 비밀값은 코드나 브라우저 공개 환경변수에 넣지 않습니다.
 
 Google Apps Script에 추가할 폼별 코드는 `google-apps-script/DaylogLifeSession.gs`에 있습니다. 통합 수신기의 기존 `Main.gs`에는 `daylog_life_session` 비밀키 매핑과 처리 분기를 별도로 추가해야 합니다.
+
+## 문서 및 기획·명세
+
+- [통합 문서 목차](docs/README.md) (`docs/목차.md`)
+- [디자인 시스템](docs/04-디자인/디자인-시스템.md) 및 [디자인 토큰](docs/05-구현-명세/디자인-토큰.md)
+- [신청폼 구현 명세](docs/05-구현-명세/신청-폼-구현.md) 및 [데이터 정의](docs/05-구현-명세/신청-폼-데이터-정의.md)
+- [UI 수정방향 기획](docs/UI-수정방향-기획.md)
+

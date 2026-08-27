@@ -17,45 +17,45 @@ export function RoutineNotebook({ answers, onEditStep }: RoutineNotebookProps) {
       isFilled: Boolean(answers.dailyRhythm),
       value: answers.dailyRhythm ? labels.dailyRhythm[answers.dailyRhythm] : null,
       reflection: answers.dailyRhythm ? diarySentenceMap.dailyRhythm[answers.dailyRhythm] : null,
-      emptyHint: '어떤 시간대에 나다워지는지 기록을 기다리고 있어요.',
+      emptyHint: '어떤 시간대에 가장 나다워지는지 기록을 기다리고 있어요.',
     },
     {
       stepIndex: 1,
       stepNum: '02',
       badge: '하루의 온도',
-      title: '나의 에너지 시간대와 순간',
+      title: '내가 활력을 얻는 순간 & 지치는 순간',
       icon: '☀️🌙',
       isFilled: Boolean(answers.comfortableTime?.trim() || answers.difficultTime?.trim()),
       value:
         answers.comfortableTime?.trim() && answers.difficultTime?.trim()
-          ? `☀️ 편안한 때: ${answers.comfortableTime.trim()} · 🌙 버거운 때: ${answers.difficultTime.trim()}`
+          ? `☀️ 활력 순간: ${answers.comfortableTime.trim()} · 🌙 지치는 순간: ${answers.difficultTime.trim()}`
           : answers.comfortableTime?.trim()
-            ? `☀️ 편안한 때: ${answers.comfortableTime.trim()}`
+            ? `☀️ 활력 순간: ${answers.comfortableTime.trim()}`
             : answers.difficultTime?.trim()
-              ? `🌙 버거운 때: ${answers.difficultTime.trim()}`
+              ? `🌙 지치는 순간: ${answers.difficultTime.trim()}`
               : null,
       reflection:
         answers.comfortableTime?.trim() && answers.difficultTime?.trim()
-          ? '하루의 에너지 흐름을 파악하여 가장 나다운 시간에 핵심 일과를 배치하고 취약 시간을 방어합니다.'
+          ? '하루의 에너지 흐름을 존중하여 활력 있는 시간에 핵심 일과를 배치하고, 지치는 취약 시간은 부드럽게 방어합니다.'
           : null,
-      emptyHint: '에너지가 차오르는 시간과 가라앉는 순간을 적어주세요.',
+      emptyHint: '에너지가 차오르는 순간과 가라앉는 순간을 적어주세요.',
     },
     {
       stepIndex: 2,
       stepNum: '03',
       badge: '지속의 조건',
-      title: '내가 무언가를 지속할 수 있었던 이유',
+      title: '나를 지속하게 만드는 고유한 조건',
       icon: '📎',
       isFilled: Boolean(answers.pastPattern),
       value: answers.pastPattern ? labels.pastPattern[answers.pastPattern] : null,
       reflection: answers.pastPattern ? diarySentenceMap.pastPattern[answers.pastPattern] : null,
-      emptyHint: '무언가를 꾸준히 이어가게 했던 나만의 방식을 탐색합니다.',
+      emptyHint: '무언가를 꾸준히 이어가게 했던 나만의 방식을 기록합니다.',
     },
     {
       stepIndex: 3,
       stepNum: '04',
-      badge: '바꿀 습관',
-      title: '새롭게 만들고 싶은 생활 습관',
+      badge: '돌볼 습관',
+      title: '가장 먼저 돌보고 싶은 일상의 습관',
       icon: '🎯',
       isFilled: Boolean(answers.primaryChangeArea),
       value: answers.primaryChangeArea
@@ -70,7 +70,7 @@ export function RoutineNotebook({ answers, onEditStep }: RoutineNotebookProps) {
               .map((a) => labels.changeArea[a])
           : [],
       reflection: answers.primaryChangeArea
-        ? '가장 먼저 집중해서 다룰 주제를 중심으로 1:1 맞춤 루틴을 설계합니다.'
+        ? `가장 먼저 돌보고 싶은 '${labels.changeArea[answers.primaryChangeArea]}' 영역을 중심으로 일상에 무리 없는 1:1 맞춤 루틴을 설계합니다.`
         : null,
       emptyHint: '지금 일상에서 가장 먼저 손보고 싶은 영역을 선택해주세요.',
     },
@@ -78,7 +78,7 @@ export function RoutineNotebook({ answers, onEditStep }: RoutineNotebookProps) {
       stepIndex: 4,
       stepNum: '05',
       badge: '동행 방식',
-      title: '나와 맞는 페이스와 동행 방식',
+      title: '나와 꼭 맞는 코치와의 동행 방식',
       icon: '🤝',
       isFilled: Boolean(answers.togetherStyle),
       value: answers.togetherStyle ? labels.togetherStyle[answers.togetherStyle] : null,
@@ -180,7 +180,7 @@ export function RoutineNotebook({ answers, onEditStep }: RoutineNotebookProps) {
           <div className="preview-step-box">
             <span className="step-time-pill">STEP 2 · 25분</span>
             <strong className="step-box-title">취약 시간 완충 루틴 설계</strong>
-            <p className="step-box-desc">버거운 시간을 방어하고, 1순위 집중 습관을 일상에 무리 없이 안착시킵니다.</p>
+            <p className="step-box-desc">지치는 시간을 방어하고, 1순위 집중 습관을 일상에 무리 없이 안착시킵니다.</p>
           </div>
 
           <div className="preview-step-box">

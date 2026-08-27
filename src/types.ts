@@ -67,7 +67,6 @@ export type ContactDetails = {
 export type View =
   | { kind: 'intro' }
   | { kind: 'question'; index: number }
-  | { kind: 'summary' }
   | { kind: 'contact' }
   | { kind: 'success'; requestId: string }
 

@@ -63,6 +63,53 @@ body {
 }
 
 /* ==========================================================================
+   ANIMATIONS & KEYFRAMES
+   ========================================================================== */
+
+/* Left-to-right highlighter sweep animation */
+@keyframes highlighterSwipe {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.3;
+  }
+  60% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* Page turn fade/slide in */
+@keyframes spiralPageIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Pen tap active scale feedback for interactive elements */
+.spiral-choice-card:active,
+.habit-grid-card:active,
+.priority-pill-chip:active,
+.notebook-primary-btn:active,
+.notebook-secondary-btn:active,
+.quick-chip-btn:active,
+.choice-chip-btn:active,
+.method-tab-btn:active,
+.spiral-nav-tab:active,
+.draft-edit-btn:active,
+.desk-brand-btn:active {
+  transform: scale(0.985) !important;
+  transition: transform 70ms ease-out !important;
+}
+
+/* ==========================================================================
    1. DESK CANVAS & AMBIENT HEADER
    ========================================================================== */
 .desk-canvas {
@@ -164,7 +211,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
+  min-height: 36px;
   padding: 0 14px;
   background: #1e2a3e;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -197,7 +244,7 @@ body {
 }
 
 /* ==========================================================================
-   3. SPIRAL NOTEBOOK CONTAINER & BINDING RINGS
+   3. SPIRAL NOTEBOOK CONTAINER & 3D METALLIC WIRE-O RINGS
    ========================================================================== */
 .spiral-notebook-container {
   position: relative;
@@ -212,14 +259,14 @@ body {
 .spiral-binding-bar {
   position: relative;
   width: 100%;
-  height: 38px;
-  background: linear-gradient(180deg, #182338 0%, #111a2c 100%);
+  height: 40px;
+  background: linear-gradient(180deg, #1e2b40 0%, #121c2e 100%);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-bottom: 0;
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 4px 12px rgba(0, 0, 0, 0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 4px 14px rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,11 +274,11 @@ body {
 }
 
 .spiral-binding-inner {
-  width: 92%;
+  width: 94%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px;
+  padding: 0 4px;
 }
 
 .spiral-ring-unit {
@@ -239,45 +286,46 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 20px;
+  width: 18px;
 }
 
 /* Punched Hole Cutout */
 .spiral-hole {
-  width: 12px;
-  height: 12px;
-  background: radial-gradient(circle, #080d16 50%, #131c2d 100%);
+  width: 13px;
+  height: 13px;
+  background: radial-gradient(circle at 40% 35%, #070c14 40%, #162030 100%);
   border-radius: 50%;
   box-shadow: 
-    inset 0 1.5px 3px rgba(0, 0, 0, 0.8),
+    inset 0 2px 4px rgba(0, 0, 0, 0.85),
     0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
-/* 3D Metallic Wire-O Ring Loop */
+/* 3D Metallic Wire-O Ring Loop with Subtle Gradient Sheen */
 .spiral-metal-ring {
   position: absolute;
-  top: -6px;
-  width: 8px;
-  height: 28px;
+  top: -7px;
+  width: 8.5px;
+  height: 30px;
   background: linear-gradient(
-    90deg,
-    #3b4a62 0%,
-    #7a91b4 25%,
-    #ffffff 45%,
-    #4a5c78 70%,
-    #1b263b 100%
+    135deg,
+    #4b5563 0%,
+    #9ca3af 35%,
+    #1f2937 70%,
+    #d1d5db 100%
   );
   border-radius: 6px;
   box-shadow: 
-    2px 4px 6px rgba(0, 0, 0, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.8);
+    0 3px 6px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+    inset 0 -1.5px 2px rgba(0, 0, 0, 0.6);
   pointer-events: none;
 }
 
-/* Main Notebook Paper Sheet */
+/* Main Notebook Paper Sheet with Multi-Layer Paper Stack Shadows */
 .spiral-page-sheet {
   position: relative;
   width: 100%;
+  min-height: clamp(560px, 70vh, 650px);
   background-color: var(--paper);
   background-image: 
     repeating-linear-gradient(
@@ -290,14 +338,18 @@ body {
   border: 1px solid var(--paper-edge);
   border-top: 0;
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.1),
-    0 6px 0 -2px #f0ece3,
-    0 6px 4px -2px rgba(0, 0, 0, 0.15),
-    0 12px 0 -4px #e5dfd2,
-    0 12px 6px -4px rgba(0, 0, 0, 0.2),
-    0 24px 56px rgba(0, 0, 0, 0.45);
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 5px 0 -1px #f4efe5,
+    0 5px 3px -1px rgba(0, 0, 0, 0.12),
+    0 10px 0 -3px #eae3d5,
+    0 10px 5px -3px rgba(0, 0, 0, 0.16),
+    0 16px 0 -5px #dfd6c5,
+    0 16px 7px -5px rgba(0, 0, 0, 0.18),
+    0 28px 60px rgba(0, 0, 0, 0.52);
   box-sizing: border-box;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Vertical Red Margin Gutter Line */
@@ -312,28 +364,18 @@ body {
   z-index: 2;
 }
 
-/* Internal Notebook Content Padding */
+/* Internal Notebook Content Padding & Standardized Full Height */
 .notebook-page-content {
   position: relative;
   width: 100%;
-  padding: clamp(28px, 4.5vw, 44px) clamp(22px, 4vw, 48px) clamp(36px, 5vw, 52px);
+  flex: 1;
+  min-height: clamp(520px, 66vh, 610px);
+  padding: clamp(28px, 4.5vw, 44px) clamp(22px, 4vw, 48px) clamp(32px, 4.5vw, 48px);
   display: flex;
   flex-direction: column;
   gap: 24px;
   box-sizing: border-box;
   z-index: 3;
-}
-
-/* Page Transition Motion */
-@keyframes spiralPageIn {
-  0% {
-    opacity: 0;
-    transform: translateY(6px) scale(0.995);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .page-turn-forward,
@@ -468,7 +510,7 @@ body {
 
 .intro-main-title {
   margin: 0;
-  font-size: clamp(28px, 3.8vw, 38px);
+  font-size: clamp(26px, 3.8vw, 38px);
   font-weight: 900;
   line-height: 1.25;
   letter-spacing: -0.035em;
@@ -476,10 +518,25 @@ body {
 }
 
 .highlighter-text {
-  background: linear-gradient(180deg, transparent 55%, rgba(245, 184, 46, 0.45) 55%);
+  position: relative;
+  display: inline;
+  background: transparent;
   color: inherit;
   padding: 0 4px;
+}
+
+.highlighter-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 10%;
+  width: 100%;
+  height: 45%;
+  background: rgba(245, 184, 46, 0.42);
+  z-index: -1;
   border-radius: 2px;
+  transform-origin: left center;
+  animation: highlighterSwipe 400ms var(--ease) 100ms both;
 }
 
 .intro-purpose-lead {
@@ -498,52 +555,12 @@ body {
   word-break: keep-all;
 }
 
-/* 3 Fact Cards Grid */
-.intro-facts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.intro-fact-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--white);
-  border: 1.5px solid var(--paper-edge);
-  border-radius: var(--radius-md);
-  box-shadow: 0 2px 6px rgba(23, 32, 51, 0.03);
-}
-
-.fact-card-icon {
-  font-size: 18px;
-}
-
-.fact-card-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.fact-card-label {
-  font-size: 11px;
-  color: var(--ink-tertiary);
-  font-weight: 700;
-}
-
-.fact-card-value {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--navy);
-  white-space: nowrap;
-}
-
 /* 3 Process Steps Box */
 .intro-process-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 14px;
+  padding: 18px 20px;
   background: var(--white);
   border: 1.5px solid var(--paper-edge);
   border-radius: var(--radius-md);
@@ -585,11 +602,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.intro-time-badge {
-  font-size: 12.5px;
-  color: var(--ink-tertiary);
+  margin-top: auto;
+  padding-top: 18px;
 }
 
 /* ==========================================================================
@@ -676,11 +690,12 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-top: auto;
   padding-top: 18px;
   border-top: 1.5px solid var(--paper-edge);
 }
 
-/* Choice Cards (Q1, Q3, Q5) */
+/* Choice Cards (Q1, Q3, Q5) with Highlighter Sweep Animation */
 .spiral-choice-list {
   display: flex;
   flex-direction: column;
@@ -689,6 +704,7 @@ body {
 
 .spiral-choice-card {
   position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: 22px 1fr auto;
   align-items: center;
@@ -700,7 +716,21 @@ body {
   border-radius: var(--radius-md);
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(23, 32, 51, 0.03);
-  transition: all 130ms var(--ease);
+  transition: border-color 140ms var(--ease), box-shadow 140ms var(--ease), transform 120ms var(--ease);
+  overflow: hidden;
+}
+
+.spiral-choice-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(245, 184, 46, 0.18) 0%, rgba(245, 184, 46, 0.1) 100%);
+  border-radius: calc(var(--radius-md) - 2px);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .spiral-choice-card input[type="radio"] {
@@ -755,6 +785,7 @@ body {
   padding: 4px 8px;
   background: var(--paper-edge);
   border-radius: var(--radius-xs);
+  transition: all 130ms var(--ease);
 }
 
 .spiral-choice-card:hover {
@@ -766,8 +797,12 @@ body {
 .spiral-choice-card.is-selected {
   border-color: var(--navy);
   border-width: 2px;
-  background: var(--yellow-soft);
-  box-shadow: 0 4px 12px rgba(23, 32, 51, 0.08);
+  box-shadow: 0 4px 14px rgba(23, 32, 51, 0.08);
+}
+
+.spiral-choice-card.is-selected::before {
+  animation: highlighterSwipe 260ms var(--ease) forwards;
+  opacity: 1;
 }
 
 .spiral-choice-card.is-selected .spiral-radio-circle {
@@ -786,7 +821,7 @@ body {
 }
 
 /* ==========================================================================
-   7. QUESTION 02: ENERGY TIME TEXT WRITE SECTION
+   7. QUESTION 02: ENERGY TIME WRITE SECTION (RULED PAPER DESIGN)
    ========================================================================== */
 .spiral-time-write-section {
   display: flex;
@@ -805,11 +840,11 @@ body {
   flex-direction: column;
   gap: 14px;
   padding: 18px 20px;
-  background: var(--white);
+  background: #fffdf9;
   border: 1.5px solid var(--paper-edge);
   border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(23, 32, 51, 0.04);
-  transition: all 130ms var(--ease);
+  box-shadow: 0 2px 8px rgba(23, 32, 51, 0.03);
+  transition: border-color 140ms var(--ease), box-shadow 140ms var(--ease);
 }
 
 .time-write-card:focus-within {
@@ -819,7 +854,7 @@ body {
 
 .time-write-card.is-filled {
   border-color: var(--navy);
-  background: #fdfcf9;
+  background: #ffffff;
 }
 
 .time-write-header {
@@ -865,19 +900,26 @@ body {
   box-sizing: border-box;
   min-height: 48px;
   padding: 12px 16px;
-  background: var(--paper-cream);
+  background-color: #faf6ee;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(23, 32, 51, 0.035) 31px,
+    rgba(23, 32, 51, 0.035) 32px
+  );
   border: 1.5px solid var(--paper-edge);
   border-radius: var(--radius-sm);
   font-size: 14.5px;
   font-weight: 600;
-  color: var(--ink);
-  transition: all 130ms var(--ease);
+  color: var(--navy);
+  line-height: 1.5;
+  transition: all 140ms var(--ease);
 }
 
 .clean-time-text-input:focus {
   outline: none;
   border-color: var(--navy);
-  background: var(--white);
+  background-color: var(--white);
   box-shadow: 0 0 0 3px rgba(245, 184, 46, 0.25);
 }
 
@@ -902,9 +944,9 @@ body {
 }
 
 .quick-chip-btn {
-  padding: 5px 10px;
-  background: var(--paper-edge);
-  border: 1px solid transparent;
+  padding: 6px 12px;
+  background: #f4eee2;
+  border: 1px solid var(--paper-edge);
   border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
@@ -915,14 +957,8 @@ body {
 
 .quick-chip-btn:hover {
   background: var(--yellow-soft);
-  border-color: var(--navy);
+  border-color: var(--yellow-hover);
   transform: translateY(-1px);
-}
-
-.spiral-time-hint {
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--ink-tertiary);
 }
 
 /* ==========================================================================
@@ -959,17 +995,32 @@ body {
 
 .habit-grid-card {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 86px;
+  min-height: 88px;
   padding: 12px 14px;
   background: var(--white);
   border: 1.5px solid var(--paper-edge);
   border-radius: var(--radius-md);
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(23, 32, 51, 0.03);
-  transition: all 130ms var(--ease);
+  transition: border-color 140ms var(--ease), box-shadow 140ms var(--ease), transform 120ms var(--ease);
+  overflow: hidden;
+}
+
+.habit-grid-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(245, 184, 46, 0.18) 0%, rgba(245, 184, 46, 0.1) 100%);
+  border-radius: calc(var(--radius-md) - 2px);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .habit-grid-card input[type="checkbox"] {
@@ -993,6 +1044,7 @@ body {
   padding: 2px 6px;
   background: var(--paper-edge);
   border-radius: var(--radius-xs);
+  transition: all 130ms var(--ease);
 }
 
 .habit-checkbox-indicator {
@@ -1006,6 +1058,7 @@ body {
   font-size: 11px;
   font-weight: 900;
   color: var(--navy);
+  transition: all 130ms var(--ease);
 }
 
 .habit-grid-body {
@@ -1048,7 +1101,11 @@ body {
 .habit-grid-card.is-selected {
   border-color: var(--navy);
   border-width: 2px;
-  background: var(--yellow-soft);
+}
+
+.habit-grid-card.is-selected::before {
+  animation: highlighterSwipe 260ms var(--ease) forwards;
+  opacity: 1;
 }
 
 .habit-grid-card.is-selected .habit-marker-badge {
@@ -1128,6 +1185,7 @@ body {
   border-radius: 50%;
   border: 1.5px solid var(--ink-tertiary);
   background: var(--white);
+  transition: all 130ms var(--ease);
 }
 
 .priority-label {
@@ -1326,9 +1384,25 @@ body {
 }
 
 .draft-highlighter {
-  background: linear-gradient(180deg, transparent 50%, rgba(245, 184, 46, 0.4) 50%);
+  position: relative;
+  display: inline;
+  background: transparent;
   color: inherit;
   padding: 0 2px;
+}
+
+.draft-highlighter::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 8%;
+  width: 100%;
+  height: 44%;
+  background: rgba(245, 184, 46, 0.4);
+  z-index: -1;
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: highlighterSwipe 360ms var(--ease) both;
 }
 
 .draft-sub-tags {
@@ -1867,6 +1941,7 @@ details[open] .accordion-chevron {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-top: auto;
   padding-top: 14px;
   border-top: 1.5px solid var(--paper-edge);
 }
@@ -2004,7 +2079,7 @@ details[open] .accordion-chevron {
 }
 
 /* ==========================================================================
-   12. RESPONSIVE BREAKPOINTS & MOBILE POLISHING
+   12. RESPONSIVE BREAKPOINTS & 320PX DEFENSIVENESS
    ========================================================================== */
 @media (max-width: 768px) {
   .desk-canvas {
@@ -2017,16 +2092,6 @@ details[open] .accordion-chevron {
 
   .notebook-red-margin {
     left: 28px;
-  }
-
-  .intro-facts-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .time-columns-container {
-    grid-template-columns: 1fr;
-    gap: 14px;
   }
 
   .habit-cards-grid {
@@ -2076,21 +2141,99 @@ details[open] .accordion-chevron {
 }
 
 @media (max-width: 480px) {
+  .desk-canvas {
+    padding: 8px 6px 28px;
+  }
+
+  .spiral-binding-bar {
+    height: 36px;
+  }
+
+  .spiral-hole {
+    width: 10px;
+    height: 10px;
+  }
+
+  .spiral-metal-ring {
+    width: 7px;
+    height: 26px;
+    top: -5px;
+  }
+
+  .notebook-red-margin {
+    left: 18px;
+    opacity: 0.6;
+  }
+
+  .notebook-page-content {
+    padding: 20px 14px 28px;
+    gap: 18px;
+  }
+
   .spiral-nav-tab {
-    padding: 0 10px;
+    padding: 0 9px;
     font-size: 11px;
+    min-height: 32px;
   }
 
   .intro-main-title {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .question-heading {
-    font-size: 20px;
+    font-size: 19px;
+  }
+
+  .spiral-choice-card {
+    padding: 14px 14px;
+    gap: 10px;
+    min-height: 62px;
+  }
+
+  .spiral-choice-title {
+    font-size: 14.5px;
+  }
+
+  .spiral-choice-desc {
+    font-size: 12px;
   }
 
   .method-tabs-row {
     grid-template-columns: 1fr;
+  }
+
+  .time-write-card {
+    padding: 14px 14px;
+  }
+
+  .priority-select-panel {
+    padding: 14px 14px;
+  }
+
+  .draft-entry-card {
+    padding: 14px 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .notebook-red-margin {
+    display: none;
+  }
+
+  .notebook-page-content {
+    padding: 16px 10px 24px;
+  }
+
+  .habit-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .intro-main-title {
+    font-size: 22px;
+  }
+
+  .question-heading {
+    font-size: 18px;
   }
 }
 
