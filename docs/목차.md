@@ -180,3 +180,4 @@ docs/
 3. **작업 공간 분리**:
    - **문서 작업**: `/Users/won-young/Library/Mobile Documents/com~apple~CloudDocs/도구/데이로그`
    - **코드 구현**: `/Users/won-young/Documents/ChatGPT/데이로그`
+

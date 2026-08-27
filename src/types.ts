@@ -45,8 +45,8 @@ export type PreferredPeriod = 'morning' | 'afternoon' | 'evening' | 'flexible'
 
 export type ApplicationAnswers = {
   dailyRhythm?: DailyRhythm
-  comfortableTime?: number
-  difficultTime?: number
+  comfortableTime?: string
+  difficultTime?: string
   pastPattern?: PastPattern
   changeAreas: ChangeArea[]
   primaryChangeArea?: ChangeArea

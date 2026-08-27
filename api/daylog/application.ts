@@ -4,7 +4,6 @@ import {
   enumValue,
   forwardToAppsScript,
   handleApiError,
-  integer,
   optionalText,
   parseBody,
   prepareResponse,
@@ -32,9 +31,8 @@ function cleanApplication(payload: Record<string, unknown>) {
   const sessionId = text(payload.sessionId, '세션', 45, 45)
   if (!REQUEST_ID.test(requestId) || !SESSION_ID.test(sessionId)) throw new RequestError('접수 정보를 확인해주세요.')
 
-  const comfortableTime = integer(payload.comfortableTime, '편안한 시간', 0, 23)
-  const difficultTime = integer(payload.difficultTime, '힘든 시간', 0, 23)
-  if (comfortableTime === difficultTime) throw new RequestError('편안한 시간과 힘든 시간을 다르게 선택해주세요.')
+  const comfortableTime = text(payload.comfortableTime, '편안한 시간', 1, 100)
+  const difficultTime = text(payload.difficultTime, '힘든 시간', 1, 100)
 
   const changeAreas = enumArray(payload.changeAreas, CHANGE_AREAS, '변화 영역', 1, 3)
   const primaryChangeArea = enumValue(payload.primaryChangeArea, CHANGE_AREAS, '첫 변화 영역')

@@ -3,35 +3,10 @@ import type { ApplicationAnswers } from './types'
 
 type RoutineNotebookProps = {
   answers: ApplicationAnswers
-  activeStepIndex?: number
   onEditStep?: (stepIndex: number) => void
-  summary?: boolean
-  isMobileDrawer?: boolean
-  onCloseDrawer?: () => void
 }
 
-function formatHour(value: number) {
-  const period = value < 12 ? '오전' : '오후'
-  const displayHour = value === 0 ? 12 : value > 12 ? value - 12 : value
-  return `${period} ${String(displayHour).padStart(2, '0')}:00 (${String(value).padStart(2, '0')}:00)`
-}
-
-export function RoutineNotebook({
-  answers,
-  activeStepIndex,
-  onEditStep,
-  summary = false,
-  isMobileDrawer = false,
-  onCloseDrawer,
-}: RoutineNotebookProps) {
-  const filledCount = [
-    answers.dailyRhythm !== undefined,
-    answers.comfortableTime !== undefined && answers.difficultTime !== undefined,
-    answers.pastPattern !== undefined,
-    answers.primaryChangeArea !== undefined,
-    answers.togetherStyle !== undefined,
-  ].filter(Boolean).length
-
+export function RoutineNotebook({ answers, onEditStep }: RoutineNotebookProps) {
   const entries = [
     {
       stepIndex: 0,
@@ -47,29 +22,29 @@ export function RoutineNotebook({
     {
       stepIndex: 1,
       stepNum: '02',
-      badge: '에너지 시간',
-      title: '나의 에너지 타임테이블',
+      badge: '하루의 온도',
+      title: '나의 에너지 시간대와 순간',
       icon: '☀️🌙',
-      isFilled: answers.comfortableTime !== undefined && answers.difficultTime !== undefined,
+      isFilled: Boolean(answers.comfortableTime?.trim() || answers.difficultTime?.trim()),
       value:
-        answers.comfortableTime !== undefined && answers.difficultTime !== undefined
-          ? `편안한 시간: ${formatHour(answers.comfortableTime)} / 버거운 시간: ${formatHour(answers.difficultTime)}`
-          : answers.comfortableTime !== undefined
-            ? `편안한 시간: ${formatHour(answers.comfortableTime)} (버거운 시간 선택 중)`
-            : answers.difficultTime !== undefined
-              ? `버거운 시간: ${formatHour(answers.difficultTime)} (편안한 시간 선택 중)`
+        answers.comfortableTime?.trim() && answers.difficultTime?.trim()
+          ? `☀️ 편안한 때: ${answers.comfortableTime.trim()} · 🌙 버거운 때: ${answers.difficultTime.trim()}`
+          : answers.comfortableTime?.trim()
+            ? `☀️ 편안한 때: ${answers.comfortableTime.trim()}`
+            : answers.difficultTime?.trim()
+              ? `🌙 버거운 때: ${answers.difficultTime.trim()}`
               : null,
       reflection:
-        answers.comfortableTime !== undefined && answers.difficultTime !== undefined
-          ? '하루의 에너지 흐름을 파악하여 가장 나다운 시간에 핵심 일과를 배치합니다.'
+        answers.comfortableTime?.trim() && answers.difficultTime?.trim()
+          ? '하루의 에너지 흐름을 파악하여 가장 나다운 시간에 핵심 일과를 배치하고 취약 시간을 방어합니다.'
           : null,
-      emptyHint: '에너지가 차오르는 시간과 가라앉는 시간을 적어주세요.',
+      emptyHint: '에너지가 차오르는 시간과 가라앉는 순간을 적어주세요.',
     },
     {
       stepIndex: 2,
       stepNum: '03',
-      badge: '지속 조건',
-      title: '내가 지속할 수 있었던 이유',
+      badge: '지속의 조건',
+      title: '내가 무언가를 지속할 수 있었던 이유',
       icon: '📎',
       isFilled: Boolean(answers.pastPattern),
       value: answers.pastPattern ? labels.pastPattern[answers.pastPattern] : null,
@@ -84,7 +59,7 @@ export function RoutineNotebook({
       icon: '🎯',
       isFilled: Boolean(answers.primaryChangeArea),
       value: answers.primaryChangeArea
-        ? `1순위: ${labels.changeArea[answers.primaryChangeArea]}`
+        ? `1순위 집중 영역: ${labels.changeArea[answers.primaryChangeArea]}`
         : answers.changeAreas.length > 0
           ? `${answers.changeAreas.map((a) => labels.changeArea[a]).join(', ')} (1순위 선택 중)`
           : null,
@@ -113,126 +88,108 @@ export function RoutineNotebook({
   ]
 
   return (
-    <div className={`live-diary-container ${summary ? 'is-summary-mode' : ''} ${isMobileDrawer ? 'is-drawer' : ''}`}>
-      {/* Diary Header */}
-      <div className="diary-journal-header">
-        <div className="journal-header-top">
-          <div className="journal-date-tag">
-            <span className="calendar-icon" aria-hidden="true">📅</span>
-            <span className="journal-date-text">2026. 08. 27 (THU)</span>
-            <span className="journal-weather-text">· 맑음 ☀️</span>
-          </div>
-
-          <div className="journal-stamp-badge">
-            <span className="journal-stamp-dot" aria-hidden="true" />
-            <span>DAYLOG · LIFE DIARY</span>
-          </div>
-
-          {isMobileDrawer && onCloseDrawer && (
-            <button
-              type="button"
-              className="drawer-close-btn"
-              onClick={onCloseDrawer}
-              aria-label="다이어리 닫기"
-            >
-              ✕
-            </button>
-          )}
+    <div className="summary-draft-container">
+      {/* Draft Header */}
+      <div className="draft-note-header">
+        <div className="draft-header-meta">
+          <span className="draft-meta-badge">DAYLOG · LIFE NOTE</span>
+          <span className="draft-meta-date">2026 · 서울 1:1 오프라인 라이프 세션</span>
         </div>
-
-        <div className="journal-header-title-wrap">
-          <h2 className="journal-page-title">나의 하루 다이어리</h2>
-          <p className="journal-page-subtitle">
-            {summary
-              ? '오늘 기록하신 내용을 바탕으로 60분 1:1 라이프 세션이 준비됩니다.'
-              : '선택하신 답변이 실시간으로 나의 개인 다이어리에 정갈하게 기록됩니다.'}
-          </p>
-        </div>
-
-        <div className="journal-progress-pill">
-          <span className="progress-pill-label">기록 진행률</span>
-          <div className="progress-mini-bar">
-            <div className="progress-mini-fill" style={{ width: `${(filledCount / 5) * 100}%` }} />
-          </div>
-          <strong className="progress-pill-fraction">{filledCount}/5 완료</strong>
-        </div>
+        <h2 className="draft-note-title">
+          나의 하루 초안 <span className="draft-title-highlight">(Draft Note)</span>
+        </h2>
+        <p className="draft-note-desc">
+          선택하신 답변으로 완성된 첫 번째 하루 기록입니다. 이 초안은 평가나 진단이 아니며,
+          오프라인 1:1 만남에서 코치와 함께 펼쳐놓고 <strong>나다운 루틴 지도</strong>를 써내려갈 이야기의 시작점입니다.
+        </p>
       </div>
 
-      {/* Diary Notebook Ruled Page Body */}
-      <div className="diary-ruled-sheet" role="region" aria-label="실시간 라이프 다이어리 내용">
-        {entries.map((entry) => {
-          const isActive = activeStepIndex === entry.stepIndex
-          return (
-            <div
-              key={entry.stepNum}
-              className={`diary-entry-block ${entry.isFilled ? 'is-filled' : 'is-pending'} ${isActive ? 'is-active-step' : ''}`}
-            >
-              <div className="entry-gutter-marker">
-                <span className="entry-number">{entry.stepNum}</span>
-                <span className="entry-pin" aria-hidden="true">{isActive ? '✍️' : entry.isFilled ? '✓' : '○'}</span>
+      {/* Draft 5 Entries List */}
+      <div className="draft-entries-list" role="region" aria-label="완성된 하루 초안 항목">
+        {entries.map((entry) => (
+          <article className="draft-entry-card" key={entry.stepNum}>
+            <div className="draft-entry-header">
+              <div className="draft-entry-tag-group">
+                <span className="draft-step-num">{entry.stepNum}</span>
+                <span className="draft-badge">{entry.badge}</span>
+                <span className="draft-entry-icon" aria-hidden="true">{entry.icon}</span>
+                <h3 className="draft-entry-heading">{entry.title}</h3>
               </div>
 
-              <div className="entry-body-content">
-                <div className="entry-title-row">
-                  <div className="entry-title-group">
-                    <span className="entry-icon" aria-hidden="true">{entry.icon}</span>
-                    <strong className="entry-title">{entry.title}</strong>
-                    <span className="entry-category-badge">{entry.badge}</span>
+              {onEditStep && (
+                <button
+                  type="button"
+                  className="draft-edit-btn"
+                  onClick={() => onEditStep(entry.stepIndex)}
+                  aria-label={`${entry.title} 답변 수정하기`}
+                >
+                  수정 ✎
+                </button>
+              )}
+            </div>
+
+            <div className="draft-entry-body">
+              {entry.isFilled && entry.value ? (
+                <>
+                  <div className="draft-value-row">
+                    <p className="draft-value-text">
+                      <mark className="draft-highlighter">{entry.value}</mark>
+                    </p>
                   </div>
 
-                  {entry.isFilled && onEditStep && (
-                    <button
-                      type="button"
-                      className="diary-edit-stamp-btn"
-                      onClick={() => {
-                        onEditStep(entry.stepIndex)
-                        if (isMobileDrawer && onCloseDrawer) onCloseDrawer()
-                      }}
-                      aria-label={`${entry.title} 수정하기`}
-                    >
-                      다시 적기 ✎
-                    </button>
-                  )}
-                </div>
-
-                {entry.isFilled && entry.value ? (
-                  <div className="entry-ink-text-wrap">
-                    <p className="entry-ink-headline">{entry.value}</p>
-                    {entry.subAreas && entry.subAreas.length > 0 && (
-                      <div className="entry-sub-tags">
-                        <span className="sub-tag-label">함께 살필 영역:</span>
+                  {entry.subAreas && entry.subAreas.length > 0 && (
+                    <div className="draft-sub-tags">
+                      <span className="sub-tags-label">함께 살필 영역:</span>
+                      <div className="sub-tags-list">
                         {entry.subAreas.map((area) => (
                           <span className="sub-tag-chip" key={area}>{area}</span>
                         ))}
                       </div>
-                    )}
-                    {entry.reflection && <p className="entry-reflection-note">{entry.reflection}</p>}
-                  </div>
-                ) : (
-                  <div className="entry-placeholder-wrap">
-                    <p className="entry-empty-prompt">{entry.emptyHint}</p>
-                  </div>
-                )}
-              </div>
+                    </div>
+                  )}
+
+                  {entry.reflection && (
+                    <p className="draft-reflection-text">{entry.reflection}</p>
+                  )}
+                </>
+              ) : (
+                <p className="draft-empty-text">{entry.emptyHint}</p>
+              )}
             </div>
-          )
-        })}
+          </article>
+        ))}
       </div>
 
-      {/* Diary Footer Note & Official Seal */}
-      <div className="diary-journal-footer">
-        <div className="footer-wax-seal" aria-hidden="true">
-          <div className="wax-seal-inner">
-            <span className="wax-seal-brand">DAYLOG</span>
-            <span className="wax-seal-sub">ORIGINAL</span>
+      {/* 60-Minute 1:1 Session 3-Step Preview */}
+      <div className="draft-session-preview-card">
+        <div className="preview-card-header">
+          <span className="preview-pin-icon" aria-hidden="true">📌</span>
+          <div>
+            <strong className="preview-header-title">60분 1:1 LIFE SESSION 진행 순서</strong>
+            <p className="preview-header-subtitle">작성해주신 초안을 바탕으로 세션이 이렇게 진행됩니다.</p>
           </div>
         </div>
-        <div className="footer-memo-text">
-          <strong>1:1 오프라인 라이프 세션 안내</strong>
-          <p>서울 오프라인 1:1 공간에서 코치와 함께 이 다이어리를 펼쳐놓고 나에게 꼭 맞는 7일 실행 루틴 지도를 완성합니다.</p>
+
+        <div className="preview-steps-grid">
+          <div className="preview-step-box">
+            <span className="step-time-pill">STEP 1 · 20분</span>
+            <strong className="step-box-title">다이어리 라이프 인터뷰</strong>
+            <p className="step-box-desc">에너지 시간대와 과거 지속 조건을 나누며 나만의 고유한 습관 패턴을 발견합니다.</p>
+          </div>
+
+          <div className="preview-step-box">
+            <span className="step-time-pill">STEP 2 · 25분</span>
+            <strong className="step-box-title">취약 시간 완충 루틴 설계</strong>
+            <p className="step-box-desc">버거운 시간을 방어하고, 1순위 집중 습관을 일상에 무리 없이 안착시킵니다.</p>
+          </div>
+
+          <div className="preview-step-box">
+            <span className="step-time-pill">STEP 3 · 15분</span>
+            <strong className="step-box-title">7일 실행 지도 & 약속</strong>
+            <p className="step-box-desc">내일부터 당장 해볼 수 있는 작은 행동과 지속 가능한 동행 방식을 확정합니다.</p>
+          </div>
         </div>
       </div>
     </div>
   )
 }
-
