@@ -25,6 +25,16 @@ npm run build
 
 Google Apps Script에 추가할 폼별 코드는 `google-apps-script/DaylogLifeSession.gs`에 있습니다. 통합 수신기의 기존 `Main.gs`에는 `daylog_life_session` 비밀키 매핑과 처리 분기를 별도로 추가해야 합니다.
 
+## GitHub Pages 배포
+
+`.github/workflows/deploy-pages.yml`이 `main` 브랜치 변경 시 Vite의 `dist/` 결과물을 GitHub Pages에 배포합니다.
+
+1. GitHub 저장소의 **Settings → Pages**로 이동합니다.
+2. **Build and deployment → Source**를 **GitHub Actions**로 선택합니다.
+3. `main` 브랜치에 변경을 push하고 **Actions → Deploy GitHub Pages** 실행 결과를 확인합니다.
+
+GitHub Pages는 정적 파일만 호스팅하므로 Vercel Serverless Function인 `/api/daylog/application`과 `/api/daylog/track`을 실행하지 못합니다. Pages 배포는 화면 확인용으로만 사용할 수 있으며, 실제 신청 접수에는 Vercel 또는 별도의 서버 API 배포가 필요합니다. Apps Script 비밀값을 Pages 빌드 환경변수나 브라우저 코드에 넣지 않습니다.
+
 ## 문서 및 기획·명세
 
 기획·디자인·구현 명세의 단일 원본은 이 저장소의 `docs/`에서 관리합니다.
