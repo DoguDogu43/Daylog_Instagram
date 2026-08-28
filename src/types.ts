@@ -22,8 +22,6 @@ export type ChangeArea =
   | 'relationship'
   | 'rest'
 
-export type ContactMethod = 'phone' | 'email' | 'messenger'
-
 export type PreferredDay =
   | 'mon'
   | 'tue'
@@ -42,16 +40,15 @@ export type ApplicationAnswers = {
   difficultTime?: string
   pastPattern?: PastPattern
   changeAreas: ChangeArea[]
-  primaryChangeArea?: ChangeArea
 }
 
 export type ContactDetails = {
   displayName: string
-  contactMethod: ContactMethod
-  contactValue: string
+  age: string
+  phoneNumber: string
+  nearbyStation: string
   preferredDays: PreferredDay[]
   preferredPeriods: PreferredPeriod[]
-  additionalNote: string
   privacyConsent: boolean
   website: string
 }
@@ -59,6 +56,7 @@ export type ContactDetails = {
 export type View =
   | { kind: 'intro' }
   | { kind: 'question'; index: number }
+  | { kind: 'session-info' }
   | { kind: 'contact' }
   | { kind: 'success'; requestId: string }
 

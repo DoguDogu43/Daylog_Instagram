@@ -20,6 +20,7 @@ const STAGES = [
   'energy_selected',
   'past_pattern_selected',
   'change_area_selected',
+  'session_info_viewed',
   'application_started',
   'consent_accepted',
   'submitted',

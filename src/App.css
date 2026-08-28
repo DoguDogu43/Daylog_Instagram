@@ -1088,6 +1088,18 @@ body {
   color: var(--white);
 }
 
+.ranking-help-note {
+  margin: 0;
+  padding: 11px 14px;
+  background: var(--yellow-soft);
+  border-left: 4px solid var(--yellow);
+  border-radius: var(--radius-sm);
+  color: var(--ink-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 /* 1순위 Priority Selection Panel */
 .priority-select-panel {
   display: flex;
@@ -1194,7 +1206,118 @@ body {
 }
 
 /* ==========================================================================
-   9. VIEW: CONTACT FORM & RESERVATION SHEET
+   9. VIEW: SESSION INFORMATION
+   ========================================================================== */
+.session-info-page {
+  gap: 22px;
+}
+
+.session-info-header {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.session-info-kicker {
+  width: fit-content;
+  margin: 6px 0 0;
+  padding: 3px 8px;
+  background: var(--yellow);
+  border-radius: var(--radius-xs);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.session-info-title {
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(25px, 4vw, 38px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.22;
+}
+
+.session-info-title:focus {
+  outline: none;
+}
+
+.session-info-summary {
+  margin: 2px 0 0;
+  color: var(--sage);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+}
+
+.session-info-principle {
+  margin: 6px 0 0;
+  color: var(--ink-secondary);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.session-timeline {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.session-timeline-item {
+  position: relative;
+  min-width: 0;
+  padding: 14px;
+  background: var(--white);
+  border: 1.5px solid var(--paper-edge);
+  border-radius: var(--radius-md);
+}
+
+.session-time-badge {
+  display: inline-flex;
+  margin-bottom: 9px;
+  padding: 2px 7px;
+  background: var(--navy);
+  border-radius: var(--radius-xs);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.session-timeline-item strong {
+  display: block;
+  color: var(--navy);
+  font-size: 13.5px;
+  font-weight: 850;
+}
+
+.session-timeline-item p {
+  margin: 6px 0 0;
+  color: var(--ink-secondary);
+  font-size: 11.5px;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.session-followup-note {
+  margin: 0;
+  padding: 14px 18px;
+  background: #edf3ed;
+  border: 1.5px solid rgba(87, 118, 87, 0.35);
+  border-radius: var(--radius-md);
+  color: var(--navy);
+  font-size: 13.5px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ==========================================================================
+   10. VIEW: CONTACT FORM & RESERVATION SHEET
    ========================================================================== */
 .contact-page {
   gap: 22px;
@@ -1270,6 +1393,12 @@ body {
   gap: 16px;
 }
 
+.contact-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .form-group-card {
   display: flex;
   flex-direction: column;
@@ -1341,6 +1470,23 @@ body {
 .notebook-text-input.has-error {
   border-color: var(--error-red);
   background: var(--error-soft);
+}
+
+.field-format-help {
+  margin-top: -6px;
+  color: var(--ink-tertiary);
+  font-size: 11px;
+}
+
+.schedule-group.has-error {
+  border-color: var(--error-red);
+  background: var(--error-soft);
+}
+
+.schedule-picker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* Method Tabs */
@@ -1543,6 +1689,42 @@ details[open] .accordion-chevron {
   background: #fffcf4;
   border: 1.5px solid rgba(245, 184, 46, 0.5);
   border-radius: var(--radius-md);
+}
+
+.privacy-policy-copy {
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(245, 184, 46, 0.38);
+}
+
+.privacy-policy-list {
+  display: grid;
+  gap: 9px;
+  margin: 10px 0 0;
+}
+
+.privacy-policy-list > div {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.privacy-policy-list dt {
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.privacy-policy-list dd {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.consent-checkbox-label--boxed {
+  align-items: center;
+  min-height: 44px;
+  padding-top: 12px;
 }
 
 .privacy-consent-card.has-error {
@@ -1758,6 +1940,22 @@ details[open] .accordion-chevron {
     gap: 8px;
   }
 
+  .session-timeline {
+    grid-template-columns: 1fr;
+  }
+
+  .session-timeline-item {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  .session-time-badge {
+    justify-content: center;
+    margin: 0;
+  }
+
   .question-actions-bar,
   .contact-actions-bar {
     flex-direction: column-reverse;
@@ -1833,6 +2031,15 @@ details[open] .accordion-chevron {
 
   .method-tabs-row {
     grid-template-columns: 1fr;
+  }
+
+  .contact-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .privacy-policy-list > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
 
   .method-tab-btn,

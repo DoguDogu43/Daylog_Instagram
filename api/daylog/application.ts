@@ -20,7 +20,6 @@ import {
 const DAILY_RHYTHMS = ['morning_active', 'daytime_focus', 'evening_important', 'irregular_daily'] as const
 const PAST_PATTERNS = ['solo_focus', 'together_commitment', 'fixed_time_place', 'meaning_or_fun', 'unknown'] as const
 const CHANGE_AREAS = ['sleep', 'meal', 'exercise', 'smartphone', 'study', 'work', 'hobby', 'relationship', 'rest'] as const
-const CONTACT_METHODS = ['phone', 'email', 'messenger'] as const
 const PREFERRED_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'flexible'] as const
 const PREFERRED_PERIODS = ['morning', 'afternoon', 'evening', 'flexible'] as const
 
@@ -35,22 +34,18 @@ function cleanApplication(payload: Record<string, unknown>) {
   const comfortableTime = text(payload.comfortableTime, '편안한 시간', 1, 100)
   const difficultTime = text(payload.difficultTime, '힘든 시간', 1, 100)
 
-  const changeAreas = enumArray(payload.changeAreas, CHANGE_AREAS, '변화 영역', 1, 3)
-  const primaryChangeArea = enumValue(payload.primaryChangeArea, CHANGE_AREAS, '첫 변화 영역')
-  if (!changeAreas.includes(primaryChangeArea)) throw new RequestError('첫 변화 영역을 확인해주세요.')
-
-  const contactMethod = enumValue(payload.contactMethod, CONTACT_METHODS, '연락 방법')
-  const contactValue = text(payload.contactValue, '연락처', 2, 100)
-  if (contactMethod === 'phone') {
-    const digits = contactValue.replace(/\D/g, '')
-    if (digits.length < 10 || digits.length > 11) throw new RequestError('휴대전화 번호를 확인해주세요.')
+  const changeAreas = enumArray(payload.changeAreas, CHANGE_AREAS, '변화 영역 순위', 1, 3)
+  const ageText = text(String(payload.age ?? ''), '나이', 1, 3)
+  const age = Number(ageText)
+  if (!/^\d{1,3}$/.test(ageText) || !Number.isInteger(age) || age < 1 || age > 120) {
+    throw new RequestError('나이를 확인해주세요.')
   }
-  if (contactMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactValue)) {
-    throw new RequestError('이메일 주소를 확인해주세요.')
-  }
+  const phoneNumber = text(payload.phoneNumber, '전화번호', 13, 13)
+  if (!/^010-\d{4}-\d{4}$/.test(phoneNumber)) throw new RequestError('전화번호 형식을 확인해주세요.')
+  const nearbyStation = text(payload.nearbyStation, '거주지 주변 역', 1, 50)
 
-  const preferredDays = enumArray(payload.preferredDays, PREFERRED_DAYS, '희망 요일', 0, 7)
-  const preferredPeriods = enumArray(payload.preferredPeriods, PREFERRED_PERIODS, '희망 시간대', 0, 3)
+  const preferredDays = enumArray(payload.preferredDays, PREFERRED_DAYS, '인터뷰 가능 요일', 1, 7)
+  const preferredPeriods = enumArray(payload.preferredPeriods, PREFERRED_PERIODS, '인터뷰 가능 시간대', 1, 3)
   if (preferredDays.includes('flexible') && preferredDays.length !== 1) throw new RequestError('희망 요일을 확인해주세요.')
   if (preferredPeriods.includes('flexible') && preferredPeriods.length !== 1) throw new RequestError('희망 시간대를 확인해주세요.')
   if (payload.privacyConsent !== true) throw new RequestError('개인정보 수집·이용 동의가 필요해요.')
@@ -64,13 +59,12 @@ function cleanApplication(payload: Record<string, unknown>) {
     difficultTime,
     pastPattern: enumValue(payload.pastPattern, PAST_PATTERNS, '지속 방식'),
     changeAreas,
-    primaryChangeArea,
-    displayName: text(payload.displayName, '이름·호칭', 1, 50),
-    contactMethod,
-    contactValue,
+    displayName: text(payload.displayName, '이름', 1, 50),
+    age,
+    phoneNumber,
+    nearbyStation,
     preferredDays,
     preferredPeriods,
-    additionalNote: optionalText(payload.additionalNote, '추가 이야기', 500),
     privacyConsent: true,
     source: text(payload.source, '접수 경로', 1, 50),
     utmSource: optionalText(payload.utmSource, 'UTM 소스', 100),

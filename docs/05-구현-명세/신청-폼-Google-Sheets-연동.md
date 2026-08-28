@@ -97,12 +97,12 @@ Vercel 동일 출처 API
 - 입력 문자열은 `safeCell_()`을 거칩니다.
 - 응답 코드 JSON에는 생활 탐색 코드만 저장하고 연락처를 중복 저장하지 않습니다.
 
-### v2 열 전환
+### v3 열 전환
 
-- 신규 배포는 [데이터 정의](신청-폼-데이터-정의.md)의 24열 v2 구조를 사용합니다.
-- 신규 탭에는 `함께하는 방식` 열을 생성하지 않고 24열 v2 헤더를 사용합니다.
+- 신규 배포는 [데이터 정의](신청-폼-데이터-정의.md)의 23열 v3 구조를 사용합니다.
+- 신규 탭에는 신청자 정보와 변화 영역 순위를 포함한 23열 v3 헤더를 사용합니다.
 - 기존 v1 탭에 `함께하는 방식` 열이 있으면 Apps Script가 헤더만 `v1 보관 필드 (수집 중단)`으로 변경하고 기존 셀 값은 보존합니다.
-- v2 행은 현재 탭의 헤더명을 기준으로 정렬해 추가하고 보관 필드에는 빈 값을 기록하므로, 기존 25열 탭과 신규 24열 탭을 모두 안전하게 처리합니다.
+- v3 적용 시 기존 열을 삭제하지 않고 누락된 헤더만 끝에 추가합니다. 새 행은 현재 탭의 헤더명을 기준으로 정렬하며 과거 전용 열에는 빈 값을 기록합니다.
 - 자동 호환 로직이 있더라도 적용 전 탭을 백업하고 테스트용 사본에서 헤더 정렬과 기존 데이터 보존을 확인합니다.
 
 ## 퍼널 단계
@@ -114,7 +114,8 @@ Vercel 동일 출처 API
 | `energy_selected` | 편안한·힘든 시간 선택 | Scene 02 완료 |
 | `past_pattern_selected` | 지속 방식 선택 | Scene 03 완료 |
 | `change_area_selected` | 변화 영역 선택 | Scene 04 완료 |
-| `application_started` | 신청 정보 입력 | 연락 정보 화면 진입 |
+| `session_info_viewed` | 프로그램 안내 확인 | LIFE SESSION 안내 진입 |
+| `application_started` | 신청 정보 입력 | 신청 정보 화면 진입 |
 | `consent_accepted` | 개인정보 동의 | 필수 동의 선택 |
 | `submitted` | 신청 완료 | Sheets 저장 성공 후 |
 
@@ -137,7 +138,7 @@ Vercel 동일 출처 API
 | 5 | 단계 | Apps Script가 만든 표시명 |
 | 6 | 접속 경로 | `source` |
 | 7 | 폼 버전 | `formVersion` |
-| 8 | 스키마 버전 | `daylog-life-session-v2` |
+| 8 | 스키마 버전 | `daylog-life-session-v3` |
 
 퍼널 이벤트에는 이름, 연락처, LIFE NOTE 답변과 UTM 상세값을 넣지 않습니다.
 
@@ -178,8 +179,8 @@ POST /api/daylog/track
   "sessionId": "DAYLOG-S-550E8400-E29B-41D4-A716-446655440000",
   "stage": "started",
   "source": "daylog_web",
-  "formVersion": "2026.08.7",
-  "schemaVersion": "daylog-life-session-v2"
+  "formVersion": "2026.08.8",
+  "schemaVersion": "daylog-life-session-v3"
 }
 ```
 
@@ -277,15 +278,17 @@ case 'daylog_life_session':
 ## Apps Script 검증
 
 - 접수번호와 세션 ID 형식
-- `schemaVersion === 'daylog-life-session-v2'`와 허용된 `formVersion`
+- `schemaVersion === 'daylog-life-session-v3'`와 허용된 `formVersion`
 - 각 enum 값의 허용 목록 포함 여부
 - `comfortableTime`과 `difficultTime`이 앞뒤 공백을 제거한 1~100자 문자열인지
 - 제거된 `togetherStyle`을 필수값으로 요구하거나 신규 열에 저장하지 않는지
 - 생활 영역 개수가 1~3개인지
 - 생활 영역에 중복이 없는지
-- 첫 변화 영역이 선택 영역에 포함되는지
-- 연락 방법별 연락처 형식
-- 희망 요일과 시간대가 비어 있거나 허용값으로만 구성됐는지
+- 생활 영역 배열 순서가 1·2·3순위로 유지되는지
+- 나이가 1~120의 정수인지
+- 전화번호가 `010-0000-0000` 형식인지
+- 거주지 주변 역이 1~50자인지
+- 인터뷰 가능 요일과 시간대가 하나 이상의 허용값으로 구성됐는지
 - 희망 요일과 시간대에 중복이 없는지
 - `flexible`과 다른 값의 동시 선택 금지
 - 필수 개인정보 동의가 `true`인지
@@ -302,7 +305,7 @@ case 'daylog_life_session':
 {
   "ok": true,
   "submissionId": "DAYLOG-...",
-  "schemaVersion": "daylog-life-session-v2"
+  "schemaVersion": "daylog-life-session-v3"
 }
 ```
 
@@ -313,7 +316,7 @@ case 'daylog_life_session':
   "ok": true,
   "submissionId": "DAYLOG-...",
   "duplicate": true,
-  "schemaVersion": "daylog-life-session-v2"
+  "schemaVersion": "daylog-life-session-v3"
 }
 ```
 
@@ -325,7 +328,7 @@ case 'daylog_life_session':
 {
   "ok": true,
   "eventId": "DAYLOG-S-...:started",
-  "schemaVersion": "daylog-life-session-v2"
+  "schemaVersion": "daylog-life-session-v3"
 }
 ```
 
@@ -384,10 +387,10 @@ case 'daylog_life_session':
 - 에너지 순간 두 항목이 문자열 그대로 안전하게 저장됩니다.
 - 표시 문구와 응답 코드 JSON이 일치합니다.
 - 퍼널 단계가 순서대로 기록됩니다.
-- 4단계 다음에 `application_started`가 기록되며 제거된 두 단계는 생성되지 않습니다.
-- 신규 탭은 v2 24열 헤더로 생성됩니다.
+- 4단계 다음에 `session_info_viewed`, `application_started`가 순서대로 기록됩니다.
+- 신규 탭은 v3 23열 헤더로 생성됩니다.
 - 기존 v1 탭의 `함께하는 방식` 헤더는 보관 필드명으로 바뀌고 기존 값은 유지됩니다.
-- 기존 25열 탭에 추가되는 v2 행은 헤더명에 맞게 정렬되고 보관 필드는 비어 있습니다.
+- 기존 탭에는 누락된 v3 열만 추가되고 과거 데이터는 유지됩니다.
 - 퍼널현황 공식이 올바르게 계산됩니다.
 - 신청 성공 후 `submitted` 이벤트가 기록됩니다.
 
@@ -404,8 +407,8 @@ case 'daylog_life_session':
 - 잘못된 secret이 거부됩니다.
 - 허용되지 않은 enum 코드가 거부됩니다.
 - 1자 미만 또는 100자를 넘는 에너지 순간 문자열이 거부됩니다.
-- v1 스키마 요청이 v2 처리기에 섞이지 않고 안전하게 거부됩니다.
-- 첫 변화 영역이 선택 영역에 없으면 거부됩니다.
+- 이전 스키마 요청이 v3 처리기에 섞이지 않고 안전하게 거부됩니다.
+- 중복되거나 3개를 넘는 변화 영역 순위는 거부됩니다.
 - `flexible`과 다른 요일·시간대의 동시 선택이 거부됩니다.
 - 개인정보 동의가 없으면 거부됩니다.
 - 지나치게 긴 문자열이 거부됩니다.

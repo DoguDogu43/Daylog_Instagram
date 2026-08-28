@@ -91,9 +91,9 @@ export const preferredDayOptions: Array<{ id: PreferredDay; label: string }> = [
 ]
 
 export const preferredPeriodOptions: Array<{ id: PreferredPeriod; label: string }> = [
-  { id: 'morning', label: '오전' },
-  { id: 'afternoon', label: '오후' },
-  { id: 'evening', label: '저녁' },
+  { id: 'morning', label: '오전 9시~12시' },
+  { id: 'afternoon', label: '오후 12시~6시' },
+  { id: 'evening', label: '저녁 6시~9시' },
   { id: 'flexible', label: '상관없음' },
 ]
 

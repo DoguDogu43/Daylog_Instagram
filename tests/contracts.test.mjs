@@ -18,7 +18,7 @@ function quotedValues(block) {
   return [...block.matchAll(/['"]([^'"]+)['"]/g)].map((match) => match[1])
 }
 
-test('all runtime layers use the v2 application schema', async () => {
+test('all runtime layers use the v3 application schema', async () => {
   const [app, sharedApi, applicationApi, trackApi, appsScript] = await Promise.all([
     source('app'),
     source('sharedApi'),
@@ -28,8 +28,8 @@ test('all runtime layers use the v2 application schema', async () => {
   ])
 
   for (const runtimeSource of [app, sharedApi, appsScript]) {
-    assert.match(runtimeSource, /daylog-life-session-v2/)
-    assert.doesNotMatch(runtimeSource, /daylog-life-session-v1/)
+    assert.match(runtimeSource, /daylog-life-session-v3/)
+    assert.doesNotMatch(runtimeSource, /daylog-life-session-v[12]/)
   }
 
   assert.match(applicationApi, /DAYLOG_LIFE_SESSION_SCHEMA_VERSION/)
@@ -64,7 +64,7 @@ test('removed question and summary stages cannot reappear in the runtime funnel'
   assert.doesNotMatch(app, /나의 하루 초안 확인하기|다이어리 요약/)
 })
 
-test('client, API and Apps Script share the same eight-stage funnel', async () => {
+test('client, API and Apps Script share the same nine-stage funnel', async () => {
   const [app, trackApi, appsScript] = await Promise.all([
     source('app'),
     source('trackApi'),
@@ -76,6 +76,7 @@ test('client, API and Apps Script share the same eight-stage funnel', async () =
     'energy_selected',
     'past_pattern_selected',
     'change_area_selected',
+    'session_info_viewed',
     'application_started',
     'consent_accepted',
     'submitted',
@@ -84,7 +85,7 @@ test('client, API and Apps Script share the same eight-stage funnel', async () =
   const clientQuestionStages = [...app.matchAll(/stage:\s*['"]([^'"]+)['"]/g)].map((match) => match[1])
   const apiStagesBlock = trackApi.match(/const STAGES = \[([\s\S]*?)\]\s+as const/)?.[1] ?? ''
   const appsScriptStagesBlock = appsScript.match(/const DAYLOG_LIFE_SESSION_FUNNEL_STAGES = \[([\s\S]*?)\];/)?.[1] ?? ''
-  const clientStages = ['started', ...clientQuestionStages, 'application_started', 'consent_accepted', 'submitted']
+  const clientStages = ['started', ...clientQuestionStages, 'session_info_viewed', 'application_started', 'consent_accepted', 'submitted']
   const apiStages = quotedValues(apiStagesBlock)
   const appsScriptStages = [...appsScriptStagesBlock.matchAll(/key:\s*['"]([^'"]+)['"]/g)].map((match) => match[1])
 
@@ -103,6 +104,25 @@ test('removed togetherStyle field is absent from the submission pipeline', async
   for (const runtimeSource of [app, applicationApi, appsScript]) {
     assert.doesNotMatch(runtimeSource, /togetherStyle/)
   }
+})
+
+test('ranked change areas and required interview fields stay aligned across boundaries', async () => {
+  const [app, applicationApi, appsScript] = await Promise.all([
+    source('app'),
+    source('applicationApi'),
+    source('appsScript'),
+  ])
+
+  for (const runtimeSource of [app, applicationApi, appsScript]) {
+    assert.doesNotMatch(runtimeSource, /primaryChangeArea|contactMethod|contactValue|additionalNote/)
+    for (const field of ['age', 'phoneNumber', 'nearbyStation', 'preferredDays', 'preferredPeriods']) {
+      assert.match(runtimeSource, new RegExp(field))
+    }
+  }
+
+  assert.match(app, /indexOf\(option\.id\) \+ 1/)
+  assert.match(applicationApi, /\^010-\\d\{4\}-\\d\{4\}\$/)
+  assert.match(appsScript, /\(index \+ 1\) \+ '순위 '/)
 })
 
 test('starting over rotates both idempotency identifiers', async () => {

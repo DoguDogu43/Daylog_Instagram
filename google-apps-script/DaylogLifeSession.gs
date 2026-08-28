@@ -1,14 +1,14 @@
 const DAYLOG_LIFE_SESSION_APPLICATION_SHEET = '데이로그_라이프세션_신청응답';
 const DAYLOG_LIFE_SESSION_EVENT_SHEET = '데이로그_라이프세션_퍼널이벤트';
 const DAYLOG_LIFE_SESSION_SUMMARY_SHEET = '데이로그_라이프세션_퍼널현황';
-const DAYLOG_LIFE_SESSION_SCHEMA_VERSION = 'daylog-life-session-v2';
+const DAYLOG_LIFE_SESSION_SCHEMA_VERSION = 'daylog-life-session-v3';
 const DAYLOG_LIFE_SESSION_REQUEST_ID_PATTERN = /^DAYLOG-[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
 const DAYLOG_LIFE_SESSION_SESSION_ID_PATTERN = /^DAYLOG-S-[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
 
 const DAYLOG_LIFE_SESSION_HEADERS = [
-  '접수시각', '접수번호', '신청 상태', '이름·호칭', '연락 방법', '연락처',
-  '희망 요일', '희망 시간대', '하루 리듬', '편안한 시간', '힘든 시간',
-  '지속 방식', '바꾸고 싶은 영역', '첫 변화 영역', '추가 이야기',
+  '접수시각', '접수번호', '신청 상태', '이름', '나이', '전화번호', '거주지 주변 역',
+  '인터뷰 가능 요일', '인터뷰 가능 시간대', '하루 리듬', '편안한 시간', '힘든 시간',
+  '지속 방식', '변화 영역 순위',
   '개인정보 동의', '접수 경로', 'UTM 소스', 'UTM 매체',
   'UTM 캠페인', '익명 세션 ID', '폼 버전', '스키마 버전', '응답 코드 JSON'
 ];
@@ -34,14 +34,11 @@ const DAYLOG_LIFE_SESSION_CHANGE_AREAS = Object.freeze({
   sleep: '수면', meal: '식사', exercise: '운동', smartphone: '스마트폰',
   study: '공부', work: '업무', hobby: '취미', relationship: '관계', rest: '휴식'
 });
-const DAYLOG_LIFE_SESSION_CONTACT_METHODS = Object.freeze({
-  phone: '문자·전화', email: '이메일', messenger: '메신저'
-});
 const DAYLOG_LIFE_SESSION_DAYS = Object.freeze({
   mon: '월', tue: '화', wed: '수', thu: '목', fri: '금', sat: '토', sun: '일', flexible: '상관없음'
 });
 const DAYLOG_LIFE_SESSION_PERIODS = Object.freeze({
-  morning: '오전', afternoon: '오후', evening: '저녁', flexible: '상관없음'
+  morning: '오전 9시~12시', afternoon: '오후 12시~6시', evening: '저녁 6시~9시', flexible: '상관없음'
 });
 const DAYLOG_LIFE_SESSION_FUNNEL_STAGES = [
   { key: 'started', label: '신청 경험 시작' },
@@ -49,6 +46,7 @@ const DAYLOG_LIFE_SESSION_FUNNEL_STAGES = [
   { key: 'energy_selected', label: '편안한·힘든 시간 선택' },
   { key: 'past_pattern_selected', label: '지속 방식 선택' },
   { key: 'change_area_selected', label: '변화 영역 선택' },
+  { key: 'session_info_viewed', label: '프로그램 안내 확인' },
   { key: 'application_started', label: '신청 정보 입력' },
   { key: 'consent_accepted', label: '개인정보 동의' },
   { key: 'submitted', label: '신청 완료' }
@@ -87,20 +85,18 @@ function handleDaylogLifeSession_(payload, lock) {
     difficultTime: clean.difficultTime,
     pastPattern: clean.pastPattern,
     changeAreas: clean.changeAreas,
-    primaryChangeArea: clean.primaryChangeArea,
     schemaVersion: clean.schemaVersion
   });
 
   appendDaylogLifeSessionApplicationRow_(sheet, [
-    new Date(), clean.requestId, '신규', safeCell_(clean.displayName),
-    DAYLOG_LIFE_SESSION_CONTACT_METHODS[clean.contactMethod], safeCell_(clean.contactValue),
+    new Date(), clean.requestId, '신규', safeCell_(clean.displayName), clean.age,
+    safeCell_(clean.phoneNumber), safeCell_(clean.nearbyStation),
     clean.preferredDays.map(function(value) { return DAYLOG_LIFE_SESSION_DAYS[value]; }).join(', '),
     clean.preferredPeriods.map(function(value) { return DAYLOG_LIFE_SESSION_PERIODS[value]; }).join(', '),
     DAYLOG_LIFE_SESSION_DAILY_RHYTHMS[clean.dailyRhythm], safeCell_(clean.comfortableTime),
     safeCell_(clean.difficultTime), DAYLOG_LIFE_SESSION_PAST_PATTERNS[clean.pastPattern],
-    clean.changeAreas.map(function(value) { return DAYLOG_LIFE_SESSION_CHANGE_AREAS[value]; }).join(', '),
-    DAYLOG_LIFE_SESSION_CHANGE_AREAS[clean.primaryChangeArea],
-    safeCell_(clean.additionalNote), '동의', safeCell_(clean.source), safeCell_(clean.utmSource), safeCell_(clean.utmMedium),
+    clean.changeAreas.map(function(value, index) { return (index + 1) + '순위 ' + DAYLOG_LIFE_SESSION_CHANGE_AREAS[value]; }).join(', '),
+    '동의', safeCell_(clean.source), safeCell_(clean.utmSource), safeCell_(clean.utmMedium),
     safeCell_(clean.utmCampaign), clean.sessionId, clean.formVersion, clean.schemaVersion, safeCell_(responseCodes)
   ]);
 
@@ -155,13 +151,12 @@ function cleanDaylogLifeSessionApplication_(payload) {
     difficultTime: daylogLifeSessionText_(payload.difficultTime, 100, true),
     pastPattern: String(payload.pastPattern || ''),
     changeAreas: Array.isArray(payload.changeAreas) ? payload.changeAreas.map(String) : [],
-    primaryChangeArea: String(payload.primaryChangeArea || ''),
     displayName: daylogLifeSessionText_(payload.displayName, 50, true),
-    contactMethod: String(payload.contactMethod || ''),
-    contactValue: daylogLifeSessionText_(payload.contactValue, 100, true),
+    age: Number(payload.age),
+    phoneNumber: daylogLifeSessionText_(payload.phoneNumber, 13, true),
+    nearbyStation: daylogLifeSessionText_(payload.nearbyStation, 50, true),
     preferredDays: Array.isArray(payload.preferredDays) ? payload.preferredDays.map(String) : [],
     preferredPeriods: Array.isArray(payload.preferredPeriods) ? payload.preferredPeriods.map(String) : [],
-    additionalNote: daylogLifeSessionText_(payload.additionalNote, 500, false),
     source: daylogLifeSessionText_(payload.source, 50, true),
     utmSource: daylogLifeSessionText_(payload.utmSource, 100, false),
     utmMedium: daylogLifeSessionText_(payload.utmMedium, 100, false),
@@ -175,11 +170,10 @@ function cleanDaylogLifeSessionApplication_(payload) {
   if (!DAYLOG_LIFE_SESSION_DAILY_RHYTHMS[clean.dailyRhythm]) throw new Error('invalid_daily_rhythm');
   if (!DAYLOG_LIFE_SESSION_PAST_PATTERNS[clean.pastPattern]) throw new Error('invalid_past_pattern');
   validateDaylogLifeSessionArray_(clean.changeAreas, DAYLOG_LIFE_SESSION_CHANGE_AREAS, 1, 3, 'change_areas');
-  if (clean.changeAreas.indexOf(clean.primaryChangeArea) === -1) throw new Error('invalid_primary_change_area');
-  if (!DAYLOG_LIFE_SESSION_CONTACT_METHODS[clean.contactMethod]) throw new Error('invalid_contact_method');
-  validateDaylogLifeSessionContact_(clean.contactMethod, clean.contactValue);
-  validateDaylogLifeSessionArray_(clean.preferredDays, DAYLOG_LIFE_SESSION_DAYS, 0, 7, 'preferred_days');
-  validateDaylogLifeSessionArray_(clean.preferredPeriods, DAYLOG_LIFE_SESSION_PERIODS, 0, 3, 'preferred_periods');
+  if (!Number.isInteger(clean.age) || clean.age < 1 || clean.age > 120) throw new Error('invalid_age');
+  if (!/^010-\d{4}-\d{4}$/.test(clean.phoneNumber)) throw new Error('invalid_phone');
+  validateDaylogLifeSessionArray_(clean.preferredDays, DAYLOG_LIFE_SESSION_DAYS, 1, 7, 'preferred_days');
+  validateDaylogLifeSessionArray_(clean.preferredPeriods, DAYLOG_LIFE_SESSION_PERIODS, 1, 3, 'preferred_periods');
   if (clean.preferredDays.indexOf('flexible') !== -1 && clean.preferredDays.length !== 1) throw new Error('invalid_days_flexible');
   if (clean.preferredPeriods.indexOf('flexible') !== -1 && clean.preferredPeriods.length !== 1) throw new Error('invalid_periods_flexible');
   if (payload.privacyConsent !== true) throw new Error('consent_required');
@@ -191,15 +185,6 @@ function validateDaylogLifeSessionArray_(values, allowed, min, max, field) {
   if (values.length < min || values.length > max) throw new Error('invalid_' + field);
   if (new Set(values).size !== values.length) throw new Error('duplicate_' + field);
   if (values.some(function(value) { return !allowed[value]; })) throw new Error('invalid_' + field);
-}
-
-function validateDaylogLifeSessionContact_(method, value) {
-  if (method === 'phone') {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length < 10 || digits.length > 11) throw new Error('invalid_phone');
-  }
-  if (method === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error('invalid_email');
-  if (method === 'messenger' && value.length < 2) throw new Error('invalid_messenger');
 }
 
 function getDaylogLifeSessionApplicationSheet_(book) {
@@ -216,6 +201,11 @@ function getDaylogLifeSessionApplicationSheet_(book) {
   if (legacyColumn !== -1) {
     sheet.getRange(1, legacyColumn + 1).setValue(DAYLOG_LIFE_SESSION_V1_ARCHIVE_HEADER);
   }
+  DAYLOG_LIFE_SESSION_HEADERS.forEach(function(header) {
+    if (headers.indexOf(header) !== -1) return;
+    headers.push(header);
+    sheet.getRange(1, headers.length).setValue(header);
+  });
   return sheet;
 }
 

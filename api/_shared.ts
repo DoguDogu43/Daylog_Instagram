@@ -19,7 +19,7 @@ type ForwardResult = {
   error?: string
 }
 
-export const DAYLOG_LIFE_SESSION_SCHEMA_VERSION = 'daylog-life-session-v2'
+export const DAYLOG_LIFE_SESSION_SCHEMA_VERSION = 'daylog-life-session-v3'
 export const DAYLOG_REQUEST_ID_PATTERN = /^DAYLOG-[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/
 export const DAYLOG_SESSION_ID_PATTERN = /^DAYLOG-S-[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/
 
