@@ -14,6 +14,7 @@ Vercel API까지 함께 확인할 때는 환경변수를 설정한 뒤 Vercel CL
 ## 검사
 
 ```bash
+npm test
 npm run lint
 npm run build
 ```
@@ -26,8 +27,8 @@ Google Apps Script에 추가할 폼별 코드는 `google-apps-script/DaylogLifeS
 
 ## 문서 및 기획·명세
 
-- [통합 문서 목차](docs/README.md) (`docs/목차.md`)
-- [디자인 시스템](docs/04-디자인/디자인-시스템.md) 및 [디자인 토큰](docs/05-구현-명세/디자인-토큰.md)
-- [신청폼 구현 명세](docs/05-구현-명세/신청-폼-구현.md) 및 [데이터 정의](docs/05-구현-명세/신청-폼-데이터-정의.md)
-- [UI 수정방향 기획](docs/UI-수정방향-기획.md)
+기획·디자인·구현 명세의 단일 원본은 구현 저장소 밖의 iCloud 문서 공간에서 관리합니다. 구현 저장소 안에는 문서 사본을 두지 않습니다.
 
+```text
+/Users/won-young/Library/Mobile Documents/com~apple~CloudDocs/도구/데이로그
+```

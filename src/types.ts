@@ -22,13 +22,6 @@ export type ChangeArea =
   | 'relationship'
   | 'rest'
 
-export type TogetherStyle =
-  | 'visible_plan'
-  | 'social_commitment'
-  | 'tiny_start'
-  | 'frequent_adjustment'
-  | 'offline_discovery'
-
 export type ContactMethod = 'phone' | 'email' | 'messenger'
 
 export type PreferredDay =
@@ -50,7 +43,6 @@ export type ApplicationAnswers = {
   pastPattern?: PastPattern
   changeAreas: ChangeArea[]
   primaryChangeArea?: ChangeArea
-  togetherStyle?: TogetherStyle
 }
 
 export type ContactDetails = {

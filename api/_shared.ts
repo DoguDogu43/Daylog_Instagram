@@ -14,9 +14,14 @@ type ForwardResult = {
   ok: boolean
   submissionId?: string
   eventId?: string
+  schemaVersion?: string
   duplicate?: boolean
   error?: string
 }
+
+export const DAYLOG_LIFE_SESSION_SCHEMA_VERSION = 'daylog-life-session-v2'
+export const DAYLOG_REQUEST_ID_PATTERN = /^DAYLOG-[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/
+export const DAYLOG_SESSION_ID_PATTERN = /^DAYLOG-S-[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/
 
 const MAX_BODY_BYTES = 20_000
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
@@ -174,6 +179,7 @@ export async function forwardToAppsScript(payload: Record<string, unknown>): Pro
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('invalid_upstream_response')
     const response = body as ForwardResult
     if (response.ok !== true) throw new Error('upstream_rejected')
+    if (response.schemaVersion !== DAYLOG_LIFE_SESSION_SCHEMA_VERSION) throw new Error('upstream_schema_mismatch')
     return response
   } catch (error) {
     console.error('daylog_apps_script_forward_failed', error instanceof Error ? error.message : 'unknown')

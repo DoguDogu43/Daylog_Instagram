@@ -36,12 +36,14 @@
 html {
   min-width: 320px;
   background: #101827;
+  scroll-padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
 body {
   min-width: 320px;
   min-height: 100dvh;
   margin: 0;
+  overflow-x: hidden;
 }
 
 button,

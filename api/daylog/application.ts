@@ -1,5 +1,8 @@
 import {
   applyRateLimit,
+  DAYLOG_LIFE_SESSION_SCHEMA_VERSION,
+  DAYLOG_REQUEST_ID_PATTERN,
+  DAYLOG_SESSION_ID_PATTERN,
   enumArray,
   enumValue,
   forwardToAppsScript,
@@ -17,19 +20,17 @@ import {
 const DAILY_RHYTHMS = ['morning_active', 'daytime_focus', 'evening_important', 'irregular_daily'] as const
 const PAST_PATTERNS = ['solo_focus', 'together_commitment', 'fixed_time_place', 'meaning_or_fun', 'unknown'] as const
 const CHANGE_AREAS = ['sleep', 'meal', 'exercise', 'smartphone', 'study', 'work', 'hobby', 'relationship', 'rest'] as const
-const TOGETHER_STYLES = ['visible_plan', 'social_commitment', 'tiny_start', 'frequent_adjustment', 'offline_discovery'] as const
 const CONTACT_METHODS = ['phone', 'email', 'messenger'] as const
 const PREFERRED_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'flexible'] as const
 const PREFERRED_PERIODS = ['morning', 'afternoon', 'evening', 'flexible'] as const
-
-const REQUEST_ID = /^DAYLOG-[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/
-const SESSION_ID = /^DAYLOG-S-[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/
 
 function cleanApplication(payload: Record<string, unknown>) {
   if (payload.action !== 'submit') throw new RequestError('신청 요청을 확인해주세요.')
   const requestId = text(payload.requestId, '접수번호', 43, 43)
   const sessionId = text(payload.sessionId, '세션', 45, 45)
-  if (!REQUEST_ID.test(requestId) || !SESSION_ID.test(sessionId)) throw new RequestError('접수 정보를 확인해주세요.')
+  if (!DAYLOG_REQUEST_ID_PATTERN.test(requestId) || !DAYLOG_SESSION_ID_PATTERN.test(sessionId)) {
+    throw new RequestError('접수 정보를 확인해주세요.')
+  }
 
   const comfortableTime = text(payload.comfortableTime, '편안한 시간', 1, 100)
   const difficultTime = text(payload.difficultTime, '힘든 시간', 1, 100)
@@ -64,7 +65,6 @@ function cleanApplication(payload: Record<string, unknown>) {
     pastPattern: enumValue(payload.pastPattern, PAST_PATTERNS, '지속 방식'),
     changeAreas,
     primaryChangeArea,
-    togetherStyle: payload.togetherStyle ? enumValue(payload.togetherStyle, TOGETHER_STYLES, '함께하는 방식') : '',
     displayName: text(payload.displayName, '이름·호칭', 1, 50),
     contactMethod,
     contactValue,
@@ -77,7 +77,7 @@ function cleanApplication(payload: Record<string, unknown>) {
     utmMedium: optionalText(payload.utmMedium, 'UTM 매체', 100),
     utmCampaign: optionalText(payload.utmCampaign, 'UTM 캠페인', 100),
     formVersion: text(payload.formVersion, '폼 버전', 1, 30),
-    schemaVersion: enumValue(payload.schemaVersion, ['daylog-life-session-v1'] as const, '스키마 버전'),
+    schemaVersion: enumValue(payload.schemaVersion, [DAYLOG_LIFE_SESSION_SCHEMA_VERSION] as const, '스키마 버전'),
     website: '',
   }
 }
@@ -92,7 +92,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     if (typeof payload.website === 'string' && payload.website.trim()) {
       const requestId = typeof payload.requestId === 'string' ? payload.requestId : ''
-      response.status(200).json({ ok: true, requestId })
+      response.status(200).json({ ok: true, requestId, schemaVersion: DAYLOG_LIFE_SESSION_SCHEMA_VERSION })
       return
     }
 
@@ -101,6 +101,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     response.status(200).json({
       ok: true,
       requestId: result.submissionId || clean.requestId,
+      schemaVersion: DAYLOG_LIFE_SESSION_SCHEMA_VERSION,
       duplicate: result.duplicate === true,
     })
   } catch (error) {

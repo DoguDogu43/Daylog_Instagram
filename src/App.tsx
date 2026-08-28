@@ -22,9 +22,9 @@ import type {
 } from './types'
 import './App.css'
 
-const FORM_VERSION = '2026.08.6'
-const SCHEMA_VERSION = 'daylog-life-session-v1'
-const ANSWERS_STORAGE_KEY = 'daylog-life-session-answers-v6'
+const FORM_VERSION = '2026.08.7'
+const SCHEMA_VERSION = 'daylog-life-session-v2'
+const ANSWERS_STORAGE_KEY = 'daylog-life-session-answers-v7'
 
 const initialAnswers: ApplicationAnswers = {
   changeAreas: [],
@@ -43,33 +43,21 @@ const initialContact: ContactDetails = {
 
 const questionMeta = [
   {
-    step: '01',
-    label: '나의 리듬',
-    shortTitle: '하루 리듬',
     title: '요즘 나의 하루는 어떤 리듬으로 흘러가나요?',
     description: '가장 편안하게 느껴지는 하루의 흐름을 골라주세요. 코치와 함께 펼쳐볼 나의 하루 노트 첫 장에 기록됩니다.',
     stage: 'daily_rhythm_selected',
   },
   {
-    step: '02',
-    label: '하루의 온도',
-    shortTitle: '에너지 순간',
     title: '하루 중 내가 가장 활력 있는 순간과 지치는 순간은 언제인가요?',
     description: '에너지가 기분 좋게 차오르는 순간과, 유독 지치고 버거운 순간을 각각 자유롭게 적어주세요.',
     stage: 'energy_selected',
   },
   {
-    step: '03',
-    label: '지속의 조건',
-    shortTitle: '지속 조건',
     title: '내가 무언가를 기분 좋게 오래 이어갔던 순간은 언제인가요?',
     description: '성취의 크기보다 나를 계속 움직이게 만들어주었던 나만의 지속 조건을 떠올려보세요.',
     stage: 'past_pattern_selected',
   },
   {
-    step: '04',
-    label: '돌볼 습관',
-    shortTitle: '습관 영역',
     title: '지금 나의 일상에서 가장 먼저 돌보고 싶은 습관은 무엇인가요?',
     description: '1~3개를 선택한 뒤, 첫 번째 1:1 라이프 세션에서 가장 깊이 다룰 1순위 영역을 지정해주세요.',
     stage: 'change_area_selected',
@@ -140,13 +128,15 @@ function App() {
   const [error, setError] = useState('')
   const [contactErrorField, setContactErrorField] = useState<ContactErrorField | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [sessionId] = useState(() => createId('DAYLOG-S'))
-  const [requestId] = useState(() => createId('DAYLOG'))
+  const [sessionId, setSessionId] = useState(() => createId('DAYLOG-S'))
+  const [requestId, setRequestId] = useState(() => createId('DAYLOG'))
 
   const headingRef = useRef<HTMLHeadingElement>(null)
   const displayNameRef = useRef<HTMLInputElement>(null)
   const contactValueRef = useRef<HTMLInputElement>(null)
   const consentRef = useRef<HTMLInputElement>(null)
+  const questionErrorRef = useRef<HTMLParagraphElement>(null)
+  const activeTabRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     sessionStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(answers))
@@ -155,6 +145,7 @@ function App() {
   useEffect(() => {
     if (view.kind !== 'intro') headingRef.current?.focus()
     window.scrollTo({ top: 0, behavior: 'instant' })
+    activeTabRef.current?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'auto' })
   }, [view])
 
   const questionIndex = view.kind === 'question' ? view.index : -1
@@ -185,6 +176,7 @@ function App() {
       stage,
       source: 'daylog_web',
       formVersion: FORM_VERSION,
+      schemaVersion: SCHEMA_VERSION,
     }
 
     void fetch('/api/daylog/track', {
@@ -215,6 +207,7 @@ function App() {
     const validationError = validateQuestion(view.index)
     if (validationError) {
       setError(validationError)
+      requestAnimationFrame(() => questionErrorRef.current?.focus())
       return
     }
 
@@ -321,10 +314,16 @@ function App() {
 
   function restart() {
     sessionStorage.removeItem(ANSWERS_STORAGE_KEY)
-    setAnswers(initialAnswers)
-    setContact(initialContact)
+    setAnswers({ ...initialAnswers })
+    setContact({ ...initialContact })
+    setSessionId(createId('DAYLOG-S'))
+    setRequestId(createId('DAYLOG'))
     setContactErrorField(null)
     setError('')
+    goToView({ kind: 'intro' }, 'backward')
+  }
+
+  function goToCover() {
     goToView({ kind: 'intro' }, 'backward')
   }
 
@@ -332,9 +331,11 @@ function App() {
     options: ChoiceOption<T>[],
     selected: T | undefined,
     onSelect: (value: T) => void,
+    legend: string,
   ) {
     return (
-      <div className="spiral-choice-list" role="radiogroup">
+      <fieldset className="question-fieldset spiral-choice-list" aria-describedby="question-description question-error">
+        <legend className="sr-only">{legend}</legend>
         {options.map((option) => {
           const isSelected = selected === option.id
           return (
@@ -357,15 +358,18 @@ function App() {
             </label>
           )
         })}
-      </div>
+      </fieldset>
     )
   }
 
   function renderQuestion(index: number) {
     if (index === 0) {
-      return renderChoiceCards<DailyRhythm>(dailyRhythmOptions, answers.dailyRhythm, (value) => {
-        chooseSingle('dailyRhythm', value)
-      })
+      return renderChoiceCards<DailyRhythm>(
+        dailyRhythmOptions,
+        answers.dailyRhythm,
+        (value) => chooseSingle('dailyRhythm', value),
+        '지금의 하루와 가장 가까운 리듬 한 가지를 선택해주세요.',
+      )
     }
 
     if (index === 1) {
@@ -376,21 +380,22 @@ function App() {
         <div className="spiral-time-write-section">
           <div className="time-write-cards-container">
             {/* ☀️ 내가 활력을 얻는 순간 */}
-            <div className={`time-write-card time-card--comfort ${answers.comfortableTime?.trim() ? 'is-filled' : ''}`}>
-              <div className="time-write-header">
-                <div className="time-write-title-wrap">
-                  <span className="time-write-icon" aria-hidden="true">☀️</span>
-                  <div>
-                    <strong className="time-write-title">내가 가장 편안하거나 활력을 얻는 순간</strong>
-                    <span className="time-write-subtitle">하루 중 에너지가 차오르고 기분 좋게 몰입되는 때를 적어주세요.</span>
-                  </div>
-                </div>
-              </div>
+            <fieldset className={`time-write-card time-card--comfort ${answers.comfortableTime?.trim() ? 'is-filled' : ''}`}>
+              <legend className="time-write-title">
+                <span className="time-write-icon" aria-hidden="true">☀️</span>
+                내가 가장 편안하거나 활력을 얻는 순간
+              </legend>
+              <p className="time-write-subtitle" id="comfortable-time-hint">하루 중 에너지가 차오르고 기분 좋게 몰입되는 때를 적어주세요.</p>
 
               <div className="time-input-wrap">
+                <label className="sr-only" htmlFor="comfortable-time">편안하거나 활력을 얻는 순간</label>
                 <input
+                  id="comfortable-time"
                   type="text"
                   maxLength={100}
+                  aria-describedby="comfortable-time-hint question-error"
+                  aria-invalid={Boolean(error && !answers.comfortableTime?.trim())}
+                  aria-required="true"
                   className="clean-time-text-input"
                   placeholder="예: 아침 7시 기상 후 30분, 오전 10시 집중할 때 등"
                   value={answers.comfortableTime || ''}
@@ -411,24 +416,25 @@ function App() {
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* 🌙 내가 가장 지치는 순간 */}
-            <div className={`time-write-card time-card--difficult ${answers.difficultTime?.trim() ? 'is-filled' : ''}`}>
-              <div className="time-write-header">
-                <div className="time-write-title-wrap">
-                  <span className="time-write-icon" aria-hidden="true">🌙</span>
-                  <div>
-                    <strong className="time-write-title">내가 가장 버겁거나 지치는 순간</strong>
-                    <span className="time-write-subtitle">하루 중 에너지가 가라앉거나 일과에 지치는 때를 적어주세요.</span>
-                  </div>
-                </div>
-              </div>
+            <fieldset className={`time-write-card time-card--difficult ${answers.difficultTime?.trim() ? 'is-filled' : ''}`}>
+              <legend className="time-write-title">
+                <span className="time-write-icon" aria-hidden="true">🌙</span>
+                내가 가장 버겁거나 지치는 순간
+              </legend>
+              <p className="time-write-subtitle" id="difficult-time-hint">하루 중 에너지가 가라앉거나 일과에 지치는 때를 적어주세요.</p>
 
               <div className="time-input-wrap">
+                <label className="sr-only" htmlFor="difficult-time">버겁거나 지치는 순간</label>
                 <input
+                  id="difficult-time"
                   type="text"
                   maxLength={100}
+                  aria-describedby="difficult-time-hint question-error"
+                  aria-invalid={Boolean(error && !answers.difficultTime?.trim())}
+                  aria-required="true"
                   className="clean-time-text-input"
                   placeholder="예: 오후 3시 회의 끝난 뒤, 밤 11시 침대에서 폰 볼 때 등"
                   value={answers.difficultTime || ''}
@@ -449,62 +455,70 @@ function App() {
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
           </div>
         </div>
       )
     }
 
     if (index === 2) {
-      return renderChoiceCards<PastPattern>(pastPatternOptions, answers.pastPattern, (value) => {
-        chooseSingle('pastPattern', value)
-      })
+      return renderChoiceCards<PastPattern>(
+        pastPatternOptions,
+        answers.pastPattern,
+        (value) => chooseSingle('pastPattern', value),
+        '나에게 가장 가까운 지속 방식 한 가지를 선택해주세요.',
+      )
     }
 
     if (index === 3) {
       return (
         <div className="spiral-habit-section">
-          <div className="habit-header-bar">
-            <span className="habit-count-tag">
-              선택한 습관 영역: <strong>{answers.changeAreas.length} / 3개</strong> (1~3개 선택 가능)
-            </span>
-          </div>
+          <fieldset className="question-fieldset habit-area-fieldset" aria-describedby="habit-selection-status question-error">
+            <legend className="sr-only">돌보고 싶은 습관 영역을 한 개에서 세 개까지 선택해주세요.</legend>
+            <div className="habit-header-bar" id="habit-selection-status" aria-live="polite">
+              <span className="habit-count-tag">
+                선택한 영역 <strong>{answers.changeAreas.length} / 3</strong>
+              </span>
+              <span className="habit-count-help">1~3개 선택</span>
+            </div>
 
-          <div className="habit-cards-grid">
-            {changeAreaOptions.map((option) => {
-              const selected = answers.changeAreas.includes(option.id)
-              const isPrimary = answers.primaryChangeArea === option.id
-              return (
-                <label className={`habit-grid-card ${selected ? 'is-selected' : ''}`} key={option.id}>
-                  <input
-                    checked={selected}
-                    onChange={() => toggleChangeArea(option.id)}
-                    type="checkbox"
-                    value={option.id}
-                  />
-                  <div className="habit-grid-top">
-                    <span className="habit-marker-badge">{option.marker}</span>
-                    <div className="habit-checkbox-indicator" aria-hidden="true">
-                      <span>{selected ? '✓' : ''}</span>
+            <div className="habit-cards-grid">
+              {changeAreaOptions.map((option) => {
+                const selected = answers.changeAreas.includes(option.id)
+                const isPrimary = answers.primaryChangeArea === option.id
+                return (
+                  <label className={`habit-grid-card ${selected ? 'is-selected' : ''}`} key={option.id}>
+                    <input
+                      checked={selected}
+                      onChange={() => toggleChangeArea(option.id)}
+                      type="checkbox"
+                      value={option.id}
+                    />
+                    <div className="habit-grid-top">
+                      <span className="habit-marker-badge" aria-hidden="true">{option.marker}</span>
+                      <div className="habit-checkbox-indicator" aria-hidden="true">
+                        <span>{selected ? '✓' : ''}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="habit-grid-body">
-                    <strong className="habit-grid-title">{option.title}</strong>
-                    <span className="habit-grid-desc">{option.description}</span>
-                  </div>
-                  {isPrimary && <span className="habit-primary-flag" aria-label="1순위 지정">1순위</span>}
-                </label>
-              )
-            })}
-          </div>
+                    <div className="habit-grid-body">
+                      <strong className="habit-grid-title">{option.title}</strong>
+                      <span className="habit-grid-desc">{option.description}</span>
+                    </div>
+                    {isPrimary && <span className="habit-primary-flag">1순위</span>}
+                  </label>
+                )
+              })}
+            </div>
+          </fieldset>
 
           {answers.changeAreas.length > 0 && (
-            <div className="priority-select-panel scene-enter">
+            <fieldset className="priority-select-panel scene-enter" aria-describedby="priority-help question-error">
+              <legend className="sr-only">첫 번째 세션에서 우선 다룰 영역을 한 개 선택해주세요.</legend>
               <div className="priority-panel-header">
                 <span className="priority-pin-emoji" aria-hidden="true">📌</span>
                 <div>
                   <strong className="priority-panel-title">그중 첫 번째 세션에서 가장 먼저 돌보고 싶은 1순위는?</strong>
-                  <p className="priority-panel-subtitle">선택하신 {answers.changeAreas.length}개 영역 중 가장 깊이 다루고 싶은 주제를 1개 지정해주세요.</p>
+                  <p className="priority-panel-subtitle" id="priority-help">선택하신 {answers.changeAreas.length}개 영역 중 가장 깊이 다루고 싶은 주제를 1개 지정해주세요.</p>
                 </div>
               </div>
               <div className="priority-chips-row">
@@ -525,7 +539,7 @@ function App() {
                   )
                 })}
               </div>
-            </div>
+            </fieldset>
           )}
         </div>
       )
@@ -559,7 +573,7 @@ function App() {
       {/* Top Desk Ambient Header */}
       <header className="desk-header">
         <div className="desk-brand-group">
-          <button className="desk-brand-btn" onClick={restart} type="button" aria-label="노트 표지로 이동">
+          <button className="desk-brand-btn" onClick={goToCover} type="button" aria-label="작성 내용을 유지하고 노트 표지로 이동">
             DAYLOG
           </button>
           <span className="desk-brand-sep" aria-hidden="true">/</span>
@@ -580,6 +594,7 @@ function App() {
             <button
               type="button"
               key={tab.id}
+              ref={active ? activeTabRef : undefined}
               className={`spiral-nav-tab ${active ? 'is-active' : ''} ${tab.isUnlocked ? 'is-unlocked' : 'is-locked'}`}
               onClick={() => {
                 if (tab.isUnlocked) {
@@ -630,8 +645,9 @@ function App() {
                   <mark className="highlighter-text">하루를 설계해볼게요.</mark>
                 </h1>
                 <p className="intro-sub-lead">
-                  완벽한 계획표가 아니어도 괜찮아요. 요즘의 리듬, 내가 편안한 순간, 가장 먼저 돌보고 싶은 생활 습관을 하나씩 짚어가며 나만의 하루 노트를 완성합니다.
+                  완벽한 계획표가 아니어도 괜찮아요. 요즘의 리듬과 에너지, 가장 먼저 돌보고 싶은 생활 습관을 네 번의 짧은 질문으로 함께 짚어봅니다.
                 </p>
+                <p className="intro-flow-note">4개 질문 · 약 3분 · 답변 후 바로 연락 신청</p>
               </div>
 
               {/* Intro CTA */}
@@ -645,7 +661,7 @@ function App() {
           )}
 
           {/* =========================================================================
-              VIEW: QUESTIONS 01 ~ 05 (One Step, One Focus Page)
+              VIEW: QUESTIONS 01 ~ 04 (One Step, One Focus Page)
              ========================================================================= */}
           {view.kind === 'question' && (
             <div className="notebook-page-content question-page">
@@ -654,7 +670,7 @@ function App() {
                 <h1 id="question-title" ref={headingRef} tabIndex={-1} className="question-heading">
                   {questionMeta[view.index].title}
                 </h1>
-                <p className="question-sub-desc">{questionMeta[view.index].description}</p>
+                <p className="question-sub-desc" id="question-description">{questionMeta[view.index].description}</p>
               </div>
 
               {/* Interactive Form Component */}
@@ -662,11 +678,16 @@ function App() {
                 {renderQuestion(view.index)}
               </div>
 
-              {error && (
-                <p className="notebook-error-msg" role="alert" aria-live="polite">
-                  ⚠️ {error}
-                </p>
-              )}
+              <p
+                className={error ? 'notebook-error-msg' : 'sr-only'}
+                id="question-error"
+                ref={questionErrorRef}
+                role={error ? 'alert' : undefined}
+                aria-live="assertive"
+                tabIndex={error ? -1 : undefined}
+              >
+                {error ? `⚠️ ${error}` : '현재 입력 오류가 없습니다.'}
+              </p>
 
               {/* Bottom Navigation Buttons */}
               <div className="question-actions-bar">
@@ -675,12 +696,11 @@ function App() {
                 </button>
                 <button
                   className="notebook-primary-btn notebook-primary-btn--compact"
-                  disabled={Boolean(validateQuestion(view.index))}
                   onClick={goNext}
                   type="button"
                 >
                   <span className="btn-label-text">
-                    {view.index === questionMeta.length - 1 ? '나의 하루 초안 확인하기' : '다음으로'}
+                    {view.index === questionMeta.length - 1 ? '연락 신청으로' : '다음 질문으로'}
                   </span>
                   <span className="btn-circle-arrow" aria-hidden="true">→</span>
                 </button>
@@ -699,7 +719,7 @@ function App() {
                   직접 만나 이야기해볼까요?
                 </h1>
                 <p className="contact-lead-text">
-                  신청서를 남겨주시면 코치가 다이어리를 확인한 뒤 <strong>24시간 이내</strong>에 편하신 방법으로 일정 확정 연락을 드립니다.
+                  신청서를 남겨주시면 코치가 작성하신 답변을 확인한 뒤, 편하신 방법으로 일정 조율 연락을 드립니다.
                 </p>
               </div>
 
@@ -709,7 +729,7 @@ function App() {
                   <span className="memo-icon" aria-hidden="true">📍</span>
                   <div>
                     <strong>진행 공간</strong>
-                    <span>서울 1:1 오프라인 전용 공간</span>
+                    <span>오프라인 · 상세 장소 개별 안내</span>
                   </div>
                 </div>
                 <div className="memo-fact-item">
@@ -738,7 +758,9 @@ function App() {
                       <p className="group-sub">실명 또는 세션에서 불리고 싶은 호칭</p>
                     </div>
                   </div>
+                  <label className="sr-only" htmlFor="display-name">이름 또는 불리고 싶은 호칭</label>
                   <input
+                    id="display-name"
                     autoComplete="name"
                     maxLength={50}
                     aria-describedby={contactErrorField === 'displayName' ? 'contact-error' : undefined}
@@ -762,7 +784,9 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="method-tabs-row">
+                  <fieldset className="contact-method-fieldset">
+                    <legend className="sr-only">연락받을 방법을 선택해주세요.</legend>
+                    <div className="method-tabs-row">
                     {(['phone', 'email', 'messenger'] as ContactMethod[]).map((method) => (
                       <label className={`method-tab-btn ${contact.contactMethod === method ? 'is-active' : ''}`} key={method}>
                         <input
@@ -774,9 +798,12 @@ function App() {
                         <span>{method === 'phone' ? '문자·전화' : method === 'email' ? '이메일' : '메신저 (카카오톡)'}</span>
                       </label>
                     ))}
-                  </div>
+                    </div>
+                  </fieldset>
 
+                  <label className="sr-only" htmlFor="contact-value">연락받을 정보</label>
                   <input
+                    id="contact-value"
                     autoComplete={contact.contactMethod === 'phone' ? 'tel' : contact.contactMethod === 'email' ? 'email' : 'off'}
                     inputMode={contact.contactMethod === 'phone' ? 'tel' : contact.contactMethod === 'email' ? 'email' : 'text'}
                     maxLength={100}
@@ -903,10 +930,10 @@ function App() {
                 {/* Submit Actions Bar */}
                 <div className="contact-actions-bar">
                   <button className="notebook-secondary-btn" onClick={goBack} type="button">
-                    ← 다이어리 요약
+                    ← 습관 질문으로
                   </button>
                   <button className="notebook-primary-btn" disabled={submitting} type="submit">
-                    <span className="btn-label-text">{submitting ? '신청 접수하는 중…' : '1:1 Life Session 예약 완료하기'}</span>
+                    <span className="btn-label-text">{submitting ? '신청 접수하는 중…' : '1:1 Life Session 신청 접수하기'}</span>
                     {!submitting && <span className="btn-circle-arrow" aria-hidden="true">→</span>}
                   </button>
                 </div>
@@ -928,18 +955,18 @@ function App() {
               </div>
 
               <div className="success-headline-wrap">
-                <span className="success-badge">RESERVATION CONFIRMED</span>
+                <span className="success-badge">APPLICATION RECEIVED</span>
                 <h1 id="success-title" ref={headingRef} tabIndex={-1} className="success-title">
                   이제 직접 만나<br />함께 살펴볼게요.
                 </h1>
                 <p className="success-sub">
-                  작성해주신 하루 다이어리가 코치에게 전달되었습니다. <strong>24시간 이내</strong>에 남겨주신 연락처로 일정 확정 안내를 드리겠습니다.
+                  작성해주신 답변이 코치에게 전달되었습니다. 남겨주신 연락처로 확인 후 일정 조율 안내를 드리겠습니다.
                 </p>
               </div>
 
               <div className="success-receipt-card">
                 <div className="receipt-row-item">
-                  <span className="receipt-item-label">예약 접수 번호</span>
+                  <span className="receipt-item-label">신청 접수 번호</span>
                   <strong className="receipt-item-val receipt-code">{view.requestId}</strong>
                 </div>
                 <div className="receipt-row-item">
@@ -952,7 +979,7 @@ function App() {
                 </div>
                 <div className="receipt-row-item">
                   <span className="receipt-item-label">진행 장소</span>
-                  <strong className="receipt-item-val">서울 1:1 오프라인 전용 공간</strong>
+                  <strong className="receipt-item-val">상세 장소 개별 안내</strong>
                 </div>
                 <div className="receipt-row-item">
                   <span className="receipt-item-label">준비물</span>
