@@ -27,8 +27,9 @@ Google Apps Script에 추가할 폼별 코드는 `google-apps-script/DaylogLifeS
 
 ## 문서 및 기획·명세
 
-기획·디자인·구현 명세의 단일 원본은 구현 저장소 밖의 iCloud 문서 공간에서 관리합니다. 구현 저장소 안에는 문서 사본을 두지 않습니다.
+기획·디자인·구현 명세의 단일 원본은 이 저장소의 `docs/`에서 관리합니다.
 
-```text
-/Users/won-young/Library/Mobile Documents/com~apple~CloudDocs/도구/데이로그
-```
+- [통합 문서 목차](docs/README.md)
+- [디자인 시스템](docs/04-디자인/디자인-시스템.md)
+- [신청 경험 구현 명세](docs/05-구현-명세/신청-폼-구현.md)
+- [신청폼 구현 현황](docs/신청폼/구현-현황.md)
