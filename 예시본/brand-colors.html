@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d1017" />
+    <title>DAYLOG Brand Color Palette</title>
+    <style>
+      :root {
+        --navy: #172033;
+        --yellow: #f5b82e;
+        --ivory: #fff9ef;
+        --beige: #ede1cf;
+        --sage: #879a7b;
+        --charcoal: #252525;
+        --white: #ffffff;
+        --board: #0d1017;
+        --board-soft: #141822;
+        --line: rgb(255 255 255 / 14%);
+        --muted: rgb(255 255 255 / 62%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        color: var(--white);
+        background:
+          radial-gradient(circle at 50% -10%, rgb(37 52 78 / 65%), transparent 42%),
+          var(--board);
+        font-family:
+          Pretendard,
+          "Noto Sans KR",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .page {
+        width: min(1440px, calc(100% - 48px));
+        margin: 0 auto;
+        padding: 64px 0 80px;
+      }
+
+      .header {
+        margin-bottom: 44px;
+        text-align: center;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        margin: 0;
+        font-size: clamp(30px, 5vw, 58px);
+        font-weight: 800;
+        letter-spacing: -0.045em;
+      }
+
+      .brand::before,
+      .brand::after {
+        color: var(--yellow);
+        content: "✦";
+        font-size: 0.48em;
+      }
+
+      .subtitle {
+        margin: 12px 0 0;
+        color: rgb(255 255 255 / 88%);
+        font-size: clamp(13px, 1.5vw, 18px);
+        font-weight: 600;
+        letter-spacing: 0.22em;
+      }
+
+      .palette-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .color-card {
+        min-width: 0;
+        overflow: hidden;
+        background: #11141b;
+        border: 1px solid rgb(255 255 255 / 15%);
+        border-radius: 28px;
+        box-shadow: 0 24px 56px rgb(0 0 0 / 30%);
+      }
+
+      .swatch {
+        min-height: 340px;
+        background: var(--swatch);
+        border-bottom: 1px solid rgb(255 255 255 / 10%);
+      }
+
+      .swatch.navy {
+        background:
+          radial-gradient(circle at 50% 18%, #25344e, transparent 55%),
+          var(--navy);
+      }
+
+      .details {
+        padding: 24px 24px 26px;
+      }
+
+      .name-row {
+        display: flex;
+        min-height: 58px;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .dot {
+        width: 26px;
+        height: 26px;
+        flex: 0 0 auto;
+        margin-top: 2px;
+        background: var(--swatch);
+        border: 1px solid rgb(255 255 255 / 22%);
+        border-radius: 50%;
+      }
+
+      .color-name {
+        margin: 0;
+        font-size: clamp(18px, 2vw, 24px);
+        line-height: 1.22;
+        letter-spacing: -0.025em;
+      }
+
+      .color-role {
+        display: block;
+        margin-top: 5px;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .color-values {
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+      }
+
+      .value-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 8px 0;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .copy-button {
+        padding: 0;
+        color: inherit;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .copy-button:hover {
+        color: var(--white);
+      }
+
+      .copy-button:focus-visible {
+        border-radius: 4px;
+        outline: 3px solid var(--yellow);
+        outline-offset: 4px;
+      }
+
+      .usage {
+        min-height: 54px;
+        margin: 20px 0 0;
+        padding-top: 18px;
+        color: rgb(255 255 255 / 78%);
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .support {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 18px;
+      }
+
+      .support-card {
+        display: grid;
+        grid-template-columns: 116px 1fr auto;
+        align-items: center;
+        gap: 18px;
+        min-width: 0;
+        padding: 16px;
+        background: var(--board-soft);
+        border: 1px solid rgb(255 255 255 / 13%);
+        border-radius: 20px;
+      }
+
+      .support-swatch {
+        height: 94px;
+        background: var(--swatch);
+        border: 1px solid rgb(255 255 255 / 16%);
+        border-radius: 14px;
+      }
+
+      .support-copy {
+        width: 42px;
+        height: 42px;
+        color: var(--white);
+        background: rgb(255 255 255 / 8%);
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 12px;
+        cursor: pointer;
+      }
+
+      .support-copy:hover {
+        background: rgb(255 255 255 / 14%);
+      }
+
+      .support-copy:focus-visible {
+        outline: 3px solid var(--yellow);
+        outline-offset: 3px;
+      }
+
+      .support-name {
+        margin: 0 0 7px;
+        font-size: 17px;
+      }
+
+      .support-value,
+      .support-use {
+        margin: 3px 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .support-value {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 26px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgb(255 255 255 / 72%);
+        font-size: 13px;
+      }
+
+      .legend-item .dot {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+      }
+
+      .note {
+        margin: 44px auto 0;
+        color: rgb(255 255 255 / 52%);
+        font-size: 12px;
+        line-height: 1.6;
+        text-align: center;
+      }
+
+      .toast {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        padding: 13px 17px;
+        color: var(--navy);
+        background: var(--yellow);
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+        font-size: 13px;
+        font-weight: 800;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(10px);
+        transition: opacity 160ms ease, transform 160ms ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 1050px) {
+        .palette-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .support {
+          grid-template-columns: 1fr;
+        }
+
+        .legend {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 620px) {
+        .page {
+          width: min(100% - 28px, 520px);
+          padding: 42px 0 60px;
+        }
+
+        .header {
+          margin-bottom: 30px;
+        }
+
+        .palette-grid,
+        .legend {
+          grid-template-columns: 1fr;
+        }
+
+        .swatch {
+          min-height: 260px;
+        }
+
+        .support-card {
+          grid-template-columns: 82px 1fr auto;
+          gap: 12px;
+        }
+
+        .support-swatch {
+          height: 78px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <h1 class="brand">데이로그</h1>
+        <p class="subtitle">BRAND COLOR PALETTE</p>
+      </header>
+
+      <section class="palette-grid" aria-label="데이로그 핵심 브랜드 색상">
+        <article class="color-card" style="--swatch: #172033; --accent: #f5b82e">
+          <div class="swatch navy" aria-hidden="true"></div>
+          <div class="details">
+            <div class="name-row">
+              <span class="dot" aria-hidden="true"></span>
+              <div>
+                <h2 class="color-name">Deep Navy</h2>
+                <span class="color-role">PRIMARY · TRUST</span>
+              </div>
+            </div>
+            <div class="color-values">
+              <div class="value-row"><span>HEX</span><button class="copy-button" data-copy="#172033">#172033</button></div>
+              <div class="value-row"><span>RGB</span><span>23, 32, 51</span></div>
+            </div>
+            <p class="usage">로고 · 헤더 · 제목 · 핵심 섹션</p>
+          </div>
+        </article>
+
+        <article class="color-card" style="--swatch: #fff9ef; --accent: #fff9ef">
+          <div class="swatch" aria-hidden="true"></div>
+          <div class="details">
+            <div class="name-row">
+              <span class="dot" aria-hidden="true"></span>
+              <div>
+                <h2 class="color-name">Warm Ivory</h2>
+                <span class="color-role">PRIMARY · WARMTH</span>
+              </div>
+            </div>
+            <div class="color-values">
+              <div class="value-row"><span>HEX</span><button class="copy-button" data-copy="#FFF9EF">#FFF9EF</button></div>
+              <div class="value-row"><span>RGB</span><span>255, 249, 239</span></div>
+            </div>
+            <p class="usage">기본 배경 · 넓은 여백 · 따뜻한 대화</p>
+          </div>
+        </article>
+
+        <article class="color-card" style="--swatch: #f5b82e; --accent: #f5b82e">
+          <div class="swatch" aria-hidden="true"></div>
+          <div class="details">
+            <div class="name-row">
+              <span class="dot" aria-hidden="true"></span>
+              <div>
+                <h2 class="color-name">Growth Yellow</h2>
+                <span class="color-role">ACCENT · ACTION</span>
+              </div>
+            </div>
+            <div class="color-values">
+              <div class="value-row"><span>HEX</span><button class="copy-button" data-copy="#F5B82E">#F5B82E</button></div>
+              <div class="value-row"><span>RGB</span><span>245, 184, 46</span></div>
+            </div>
+            <p class="usage">CTA · 체크 · 숫자 · 밑줄 · 핵심 강조</p>
+          </div>
+        </article>
+
+        <article class="color-card" style="--swatch: #879a7b; --accent: #879a7b">
+          <div class="swatch" aria-hidden="true"></div>
+          <div class="details">
+            <div class="name-row">
+              <span class="dot" aria-hidden="true"></span>
+              <div>
+                <h2 class="color-name">Sage Green</h2>
+                <span class="color-role">ACCENT · GROWTH</span>
+              </div>
+            </div>
+            <div class="color-values">
+              <div class="value-row"><span>HEX</span><button class="copy-button" data-copy="#879A7B">#879A7B</button></div>
+              <div class="value-row"><span>RGB</span><span>135, 154, 123</span></div>
+            </div>
+            <p class="usage">습관 · 안정 · 변화 결과 · 성장 영역</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="support" aria-label="데이로그 보조 브랜드 색상">
+        <article class="support-card" style="--swatch: #ede1cf">
+          <div class="support-swatch" aria-hidden="true"></div>
+          <div>
+            <h2 class="support-name">Soft Beige</h2>
+            <p class="support-value">#EDE1CF · RGB 237, 225, 207</p>
+            <p class="support-use">카드 · 구분 영역 · 보조 배경</p>
+          </div>
+          <button class="support-copy" type="button" data-copy="#EDE1CF" aria-label="Soft Beige 색상 코드 복사">⧉</button>
+        </article>
+
+        <article class="support-card" style="--swatch: #252525">
+          <div class="support-swatch" aria-hidden="true"></div>
+          <div>
+            <h2 class="support-name">Charcoal</h2>
+            <p class="support-value">#252525 · RGB 37, 37, 37</p>
+            <p class="support-use">본문 · 정보성 텍스트</p>
+          </div>
+          <button class="support-copy" type="button" data-copy="#252525" aria-label="Charcoal 색상 코드 복사">⧉</button>
+        </article>
+
+        <article class="support-card" style="--swatch: #ffffff">
+          <div class="support-swatch" aria-hidden="true"></div>
+          <div>
+            <h2 class="support-name">Clean White</h2>
+            <p class="support-value">#FFFFFF · RGB 255, 255, 255</p>
+            <p class="support-use">카드 · 네이비 배경 위 텍스트</p>
+          </div>
+          <button class="support-copy" type="button" data-copy="#FFFFFF" aria-label="Clean White 색상 코드 복사">⧉</button>
+        </article>
+      </section>
+
+      <section class="legend" aria-label="핵심 색상 용도 요약">
+        <div class="legend-item" style="--swatch: #172033"><span class="dot"></span><span>신뢰 · 구조 · 메인 텍스트</span></div>
+        <div class="legend-item" style="--swatch: #fff9ef"><span class="dot"></span><span>기본 배경 · 따뜻한 여백</span></div>
+        <div class="legend-item" style="--swatch: #f5b82e"><span class="dot"></span><span>행동 · 버튼 · 핵심 강조</span></div>
+        <div class="legend-item" style="--swatch: #879a7b"><span class="dot"></span><span>성장 · 안정 · 변화 결과</span></div>
+      </section>
+
+      <p class="note">권장 시각 비중: Warm Ivory 70% · Deep Navy 20% · Growth Yellow 10% / Sage Green은 제한적으로 사용</p>
+    </main>
+
+    <div class="toast" role="status" aria-live="polite">색상 코드를 복사했습니다.</div>
+
+    <script>
+      const toast = document.querySelector(".toast");
+      let toastTimer;
+
+      async function copyValue(value) {
+        try {
+          await navigator.clipboard.writeText(value);
+        } catch {
+          const input = document.createElement("textarea");
+          input.value = value;
+          input.style.position = "fixed";
+          input.style.opacity = "0";
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand("copy");
+          input.remove();
+        }
+
+        toast.textContent = `${value} 복사 완료`;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 1500);
+      }
+
+      document.querySelectorAll("[data-copy]").forEach((button) => {
+        button.addEventListener("click", () => copyValue(button.dataset.copy));
+      });
+    </script>
+  </body>
+</html>
