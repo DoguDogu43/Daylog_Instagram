@@ -41,23 +41,23 @@ const initialContact: ContactDetails = {
 
 const questionMeta = [
   {
-    title: '요즘 나의 하루는 어떤 리듬으로 흘러가나요?',
-    description: '가장 편안하게 느껴지는 하루의 흐름을 골라주세요. 코치와 함께 펼쳐볼 나의 하루 노트 첫 장에 기록됩니다.',
+    title: '요즘 하루는 언제 가장 잘 움직이나요?',
+    description: '평소와 가장 가까운 하루를 1개 골라주세요.',
     stage: 'daily_rhythm_selected',
   },
   {
-    title: '하루 중 내가 가장 활력 있는 순간과 지치는 순간은 언제인가요?',
-    description: '에너지가 기분 좋게 차오르는 순간과, 유독 지치고 버거운 순간을 각각 자유롭게 적어주세요.',
+    title: '하루 중 힘이 나는 때와 지치는 때는 언제인가요?',
+    description: '두 칸에 시간과 상황을 짧게 적어주세요.',
     stage: 'energy_selected',
   },
   {
-    title: '내가 무언가를 기분 좋게 오래 이어갔던 순간은 언제인가요?',
-    description: '성취의 크기보다 나를 계속 움직이게 만들어주었던 나만의 지속 조건을 떠올려보세요.',
+    title: '어떤 때에 일을 꾸준히 이어가기 쉬웠나요?',
+    description: '지금까지 가장 잘 맞았던 방법을 1개 골라주세요.',
     stage: 'past_pattern_selected',
   },
   {
-    title: '지금 나의 일상에서 가장 먼저 돌보고 싶은 습관은 무엇인가요?',
-    description: '중요한 순서대로 눌러주세요. 선택한 순서가 그대로 1·2·3순위가 됩니다.',
+    title: '먼저 바꾸고 싶은 생활 습관은 무엇인가요?',
+    description: '중요한 순서대로 1~3개를 눌러주세요. 누른 순서가 우선순위가 됩니다.',
     stage: 'change_area_selected',
   },
 ] as const
@@ -92,26 +92,26 @@ type ContactValidationError = {
 
 function validateContact(contact: ContactDetails): ContactValidationError | null {
   if (!contact.displayName.trim()) {
-    return { field: 'displayName', message: '이름을 입력해주세요.' }
+    return { field: 'displayName', message: '이름을 입력해 주세요.' }
   }
   const age = Number(contact.age)
   if (!/^\d{1,3}$/.test(contact.age) || !Number.isInteger(age) || age < 1 || age > 120) {
-    return { field: 'age', message: '나이를 숫자로 정확히 입력해주세요.' }
+    return { field: 'age', message: '나이를 1~120 사이 숫자로 입력해 주세요.' }
   }
   if (!/^010-\d{4}-\d{4}$/.test(contact.phoneNumber)) {
-    return { field: 'phoneNumber', message: '전화번호를 010-0000-0000 형식으로 입력해주세요.' }
+    return { field: 'phoneNumber', message: '전화번호를 010-0000-0000 형식으로 입력해 주세요.' }
   }
   if (!contact.nearbyStation.trim()) {
-    return { field: 'nearbyStation', message: '거주지 주변 역을 입력해주세요.' }
+    return { field: 'nearbyStation', message: '만나기 편한 지하철역을 입력해 주세요.' }
   }
   if (contact.preferredDays.length === 0) {
-    return { field: 'preferredDays', message: '인터뷰 가능한 요일을 하나 이상 선택해주세요.' }
+    return { field: 'preferredDays', message: '가능한 요일을 1개 이상 골라주세요.' }
   }
   if (contact.preferredPeriods.length === 0) {
-    return { field: 'preferredPeriods', message: '인터뷰 가능한 시간대를 하나 이상 선택해주세요.' }
+    return { field: 'preferredPeriods', message: '가능한 시간대를 1개 이상 골라주세요.' }
   }
   if (!contact.privacyConsent) {
-    return { field: 'privacyConsent', message: '원활한 세션 안내를 위해 개인정보 수집·이용에 동의해주세요.' }
+    return { field: 'privacyConsent', message: '개인정보 수집·이용 내용을 확인하고 필수 동의에 체크해 주세요.' }
   }
   return null
 }
@@ -200,12 +200,12 @@ function App() {
   }
 
   function validateQuestion(index: number) {
-    if (index === 0 && !answers.dailyRhythm) return '지금의 하루와 가장 가까운 리듬을 골라주세요.'
+    if (index === 0 && !answers.dailyRhythm) return '평소와 가장 가까운 하루를 1개 골라주세요.'
     if (index === 1 && (!answers.comfortableTime?.trim() || !answers.difficultTime?.trim())) {
-      return '활력을 얻는 순간과 지치는 순간을 각각 적어주세요.'
+      return '힘이 나는 때와 지치는 때를 각각 적어주세요.'
     }
-    if (index === 2 && !answers.pastPattern) return '나에게 가장 가까운 지속 방식을 골라주세요.'
-    if (index === 3 && answers.changeAreas.length === 0) return '돌보고 싶은 습관 영역을 최소 1개 이상 골라주세요.'
+    if (index === 2 && !answers.pastPattern) return '가장 잘 맞았던 방법을 1개 골라주세요.'
+    if (index === 3 && answers.changeAreas.length === 0) return '바꾸고 싶은 습관을 1개 이상 골라주세요.'
     return ''
   }
 
@@ -252,7 +252,7 @@ function App() {
     setAnswers((current) => {
       const exists = current.changeAreas.includes(area)
       if (!exists && current.changeAreas.length >= 3) {
-        setError('최대 3개까지 선택할 수 있어요.')
+        setError('습관은 3개까지 고를 수 있어요. 하나를 취소한 뒤 다시 골라주세요.')
         return current
       }
       const next = exists
@@ -309,7 +309,7 @@ function App() {
         body: JSON.stringify(payload),
       })
       const result = await response.json().catch(() => null) as ApiResult | null
-      if (!result) throw new Error('신청 접수 서버와 연결하지 못했습니다.')
+      if (!result) throw new Error('신청 내용을 보내지 못했어요. 입력한 내용은 화면에 남아 있어요. 잠시 후 다시 신청해 주세요.')
       if (!response.ok || !result.ok) throw new Error(result.error)
       sessionStorage.removeItem(ANSWERS_STORAGE_KEY)
       goToView({ kind: 'success', requestId: result.requestId ?? requestId }, 'forward')
@@ -318,7 +318,7 @@ function App() {
       setError(
         submitError instanceof Error && submitError.message
           ? submitError.message
-          : '신청을 접수하지 못했습니다. 작성하신 다이어리 내용은 안전하게 보관되어 있으니 잠시 후 다시 시도해주세요.',
+          : '신청 내용을 보내지 못했어요. 입력한 내용은 화면에 남아 있어요. 잠시 후 다시 신청해 주세요.',
       )
     } finally {
       setSubmitting(false)
@@ -382,12 +382,12 @@ function App() {
         dailyRhythmOptions,
         answers.dailyRhythm,
         (value) => chooseSingle('dailyRhythm', value),
-        '지금의 하루와 가장 가까운 리듬 한 가지를 선택해주세요.',
+        '평소와 가장 가까운 하루를 1개 골라주세요.',
       )
     }
 
     if (index === 1) {
-      const quickComfortExamples = ['아침 7시 기상 직후', '오전 10시 몰입 시간', '퇴근 직후 저녁 7시', '밤 10시 조용한 시간']
+      const quickComfortExamples = ['아침 7시 기상 직후', '오전 10시 집중할 때', '퇴근 직후 저녁 7시', '밤 10시 조용한 시간']
       const quickDifficultExamples = ['오후 2~3시 나른할 때', '퇴근길 만원 지하철', '밤 11시 침대에서 폰 볼 때', '아침 출근 준비할 때']
 
       return (
@@ -397,12 +397,12 @@ function App() {
             <fieldset className={`time-write-card time-card--comfort ${answers.comfortableTime?.trim() ? 'is-filled' : ''}`}>
               <legend className="time-write-title">
                 <span className="time-write-icon" aria-hidden="true">☀️</span>
-                내가 가장 편안하거나 활력을 얻는 순간
+                힘이 나는 때
               </legend>
-              <p className="time-write-subtitle" id="comfortable-time-hint">하루 중 에너지가 차오르고 기분 좋게 몰입되는 때를 적어주세요.</p>
+              <p className="time-write-subtitle" id="comfortable-time-hint">기분이 좋고 집중이 잘되는 때를 적어주세요.</p>
 
               <div className="time-input-wrap">
-                <label className="sr-only" htmlFor="comfortable-time">편안하거나 활력을 얻는 순간</label>
+                <label className="sr-only" htmlFor="comfortable-time">힘이 나는 때</label>
                 <input
                   id="comfortable-time"
                   type="text"
@@ -411,14 +411,14 @@ function App() {
                   aria-invalid={Boolean(error && !answers.comfortableTime?.trim())}
                   aria-required="true"
                   className="clean-time-text-input"
-                  placeholder="예: 아침 7시 기상 후 30분, 오전 10시 집중할 때 등"
+                  placeholder="예: 아침 7시, 씻고 난 뒤"
                   value={answers.comfortableTime || ''}
                   onChange={(e) => chooseSingle('comfortableTime', e.target.value)}
                 />
               </div>
 
               <div className="quick-example-chips">
-                <span className="chips-hint-label">빠른 입력 힌트:</span>
+                <span className="chips-hint-label">예시로 입력하기</span>
                 {quickComfortExamples.map((example) => (
                   <button
                     type="button"
@@ -436,12 +436,12 @@ function App() {
             <fieldset className={`time-write-card time-card--difficult ${answers.difficultTime?.trim() ? 'is-filled' : ''}`}>
               <legend className="time-write-title">
                 <span className="time-write-icon" aria-hidden="true">🌙</span>
-                내가 가장 버겁거나 지치는 순간
+                지치는 때
               </legend>
-              <p className="time-write-subtitle" id="difficult-time-hint">하루 중 에너지가 가라앉거나 일과에 지치는 때를 적어주세요.</p>
+              <p className="time-write-subtitle" id="difficult-time-hint">힘이 빠지거나 버거운 때를 적어주세요.</p>
 
               <div className="time-input-wrap">
-                <label className="sr-only" htmlFor="difficult-time">버겁거나 지치는 순간</label>
+                <label className="sr-only" htmlFor="difficult-time">지치는 때</label>
                 <input
                   id="difficult-time"
                   type="text"
@@ -450,14 +450,14 @@ function App() {
                   aria-invalid={Boolean(error && !answers.difficultTime?.trim())}
                   aria-required="true"
                   className="clean-time-text-input"
-                  placeholder="예: 오후 3시 회의 끝난 뒤, 밤 11시 침대에서 폰 볼 때 등"
+                  placeholder="예: 오후 3시, 회의가 끝난 뒤"
                   value={answers.difficultTime || ''}
                   onChange={(e) => chooseSingle('difficultTime', e.target.value)}
                 />
               </div>
 
               <div className="quick-example-chips">
-                <span className="chips-hint-label">빠른 입력 힌트:</span>
+                <span className="chips-hint-label">예시로 입력하기</span>
                 {quickDifficultExamples.map((example) => (
                   <button
                     type="button"
@@ -480,7 +480,7 @@ function App() {
         pastPatternOptions,
         answers.pastPattern,
         (value) => chooseSingle('pastPattern', value),
-        '나에게 가장 가까운 지속 방식 한 가지를 선택해주세요.',
+        '지금까지 가장 잘 맞았던 방법을 1개 골라주세요.',
       )
     }
 
@@ -488,7 +488,7 @@ function App() {
       return (
         <div className="spiral-habit-section">
           <fieldset className="question-fieldset habit-area-fieldset" aria-describedby="habit-selection-status question-error">
-            <legend className="sr-only">돌보고 싶은 습관 영역을 한 개에서 세 개까지 선택해주세요.</legend>
+            <legend className="sr-only">바꾸고 싶은 생활 습관을 1개에서 3개까지 골라주세요.</legend>
             <div className="habit-header-bar" id="habit-selection-status" aria-live="polite">
               <span className="habit-count-tag">
                 선택한 영역 <strong>{answers.changeAreas.length} / 3</strong>
@@ -526,8 +526,8 @@ function App() {
           </fieldset>
           <p className="ranking-help-note" aria-live="polite">
             {answers.changeAreas.length === 0
-              ? '가장 바꾸고 싶은 영역부터 눌러주세요.'
-              : `${answers.changeAreas.length}순위까지 정했습니다. 선택을 취소하면 뒤 순위가 자동으로 당겨집니다.`}
+              ? '가장 먼저 바꾸고 싶은 습관부터 눌러주세요.'
+              : `${answers.changeAreas.length}개를 골랐어요. 선택을 취소하면 다음 항목의 순서가 앞으로 당겨져요.`}
           </p>
         </div>
       )
@@ -535,16 +535,16 @@ function App() {
 
   }
 
-  // Spiral ring coils for authentic notebook top header
+  // Spiral ring coils for the notebook's left-side binding
   const spiralCoilCount = 14
   const spiralCoils = Array.from({ length: spiralCoilCount })
 
   // Index step tabs for clean notebook navigation
   const navTabs = [
     { id: 'intro', label: '표지', isUnlocked: true, targetView: { kind: 'intro' as const } },
-    { id: 'q0', label: '01 리듬', isUnlocked: true, targetView: { kind: 'question' as const, index: 0 } },
-    { id: 'q1', label: '02 온도', isUnlocked: filledCount >= 1 || (view.kind === 'question' && view.index >= 1), targetView: { kind: 'question' as const, index: 1 } },
-    { id: 'q2', label: '03 지속', isUnlocked: filledCount >= 2 || (view.kind === 'question' && view.index >= 2), targetView: { kind: 'question' as const, index: 2 } },
+    { id: 'q0', label: '01 하루', isUnlocked: true, targetView: { kind: 'question' as const, index: 0 } },
+    { id: 'q1', label: '02 시간', isUnlocked: filledCount >= 1 || (view.kind === 'question' && view.index >= 1), targetView: { kind: 'question' as const, index: 1 } },
+    { id: 'q2', label: '03 방법', isUnlocked: filledCount >= 2 || (view.kind === 'question' && view.index >= 2), targetView: { kind: 'question' as const, index: 2 } },
     { id: 'q3', label: '04 습관', isUnlocked: filledCount >= 3 || (view.kind === 'question' && view.index >= 3), targetView: { kind: 'question' as const, index: 3 } },
     { id: 'session-info', label: '05 안내', isUnlocked: filledCount >= 4 || view.kind === 'session-info' || applicationUnlocked, targetView: { kind: 'session-info' as const } },
     { id: 'contact', label: '06 신청', isUnlocked: applicationUnlocked || view.kind === 'contact', targetView: { kind: 'contact' as const } },
@@ -576,33 +576,33 @@ function App() {
         </div>
       </header>
 
-      {/* Step Navigation Index Tabs */}
-      <nav className="spiral-nav-tabs" aria-label="노트 페이지 이동">
-        {navTabs.map((tab) => {
-          const active = isTabActive(tab.id)
-          return (
-            <button
-              type="button"
-              key={tab.id}
-              ref={active ? activeTabRef : undefined}
-              className={`spiral-nav-tab ${active ? 'is-active' : ''} ${tab.isUnlocked ? 'is-unlocked' : 'is-locked'}`}
-              onClick={() => {
-                if (tab.isUnlocked) {
-                  goToView(tab.targetView, 'forward')
-                }
-              }}
-              disabled={!tab.isUnlocked}
-              aria-current={active ? 'page' : undefined}
-            >
-              <span>{tab.label}</span>
-            </button>
-          )
-        })}
-      </nav>
-
       {/* THE SPIRAL NOTEBOOK CONTAINER */}
       <main className={`spiral-notebook-container view-${view.kind}`}>
-        {/* Top Wire-O Spiral Binding Bar */}
+        {/* Page index tabs sit behind the paper's top edge. */}
+        <nav className="spiral-nav-tabs" aria-label="노트 페이지 이동">
+          {navTabs.map((tab) => {
+            const active = isTabActive(tab.id)
+            return (
+              <button
+                type="button"
+                key={tab.id}
+                ref={active ? activeTabRef : undefined}
+                className={`spiral-nav-tab ${active ? 'is-active' : ''} ${tab.isUnlocked ? 'is-unlocked' : 'is-locked'}`}
+                onClick={() => {
+                  if (tab.isUnlocked) {
+                    goToView(tab.targetView, 'forward')
+                  }
+                }}
+                disabled={!tab.isUnlocked}
+                aria-current={active ? 'page' : undefined}
+              >
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Left Wire-O Spiral Binding Bar */}
         <div className="spiral-binding-bar" aria-hidden="true">
           <div className="spiral-binding-inner">
             {spiralCoils.map((_, idx) => (
@@ -626,24 +626,24 @@ function App() {
             <div className="notebook-page-content intro-page">
               <div className="intro-header-badge">
                 <span className="gold-star-icon" aria-hidden="true">✦</span>
-                <span>DAYLOG LIFE NOTE</span>
+                <span>데이로그 생활 노트</span>
               </div>
 
               <div className="intro-headline-section">
                 <h1 id="intro-title" className="intro-main-title">
-                  나에게 맞는<br />
-                  <mark className="highlighter-text">하루를 설계해볼게요.</mark>
+                  내 생활에 맞는 습관을<br />
+                  <mark className="highlighter-text">함께 찾아봐요.</mark>
                 </h1>
                 <p className="intro-sub-lead">
-                  완벽한 계획표가 아니어도 괜찮아요. 요즘의 리듬과 에너지, 가장 먼저 돌보고 싶은 생활 습관을 네 번의 짧은 질문으로 함께 짚어봅니다.
+                  데이로그는 60분 동안 직접 만나 요즘 생활을 듣고, 지금 시작할 행동 1~3개를 함께 정합니다.
                 </p>
-                <p className="intro-flow-note">4개 질문 · 약 3분 · 답변 후 바로 연락 신청</p>
+                <p className="intro-flow-note">4개 질문 · 약 3분 · 답변 뒤 체험 신청</p>
               </div>
 
               {/* Intro CTA */}
               <div className="intro-cta-section">
                 <button className="notebook-primary-btn" type="button" onClick={startExperience}>
-                  <span className="btn-label-text">노트 작성하고 신청하기</span>
+                  <span className="btn-label-text">4개 질문 시작하기</span>
                   <span className="btn-circle-arrow" aria-hidden="true">→</span>
                 </button>
               </div>
@@ -682,7 +682,7 @@ function App() {
               {/* Bottom Navigation Buttons */}
               <div className="question-actions-bar">
                 <button className="notebook-secondary-btn" onClick={goBack} type="button">
-                  ← 이전
+                  ← {view.index === 0 ? '표지로 돌아가기' : '이전 질문 보기'}
                 </button>
                 <button
                   className="notebook-primary-btn notebook-primary-btn--compact"
@@ -690,7 +690,7 @@ function App() {
                   type="button"
                 >
                   <span className="btn-label-text">
-                    {view.index === questionMeta.length - 1 ? '프로그램 안내 보기' : '다음 질문으로'}
+                    {view.index === questionMeta.length - 1 ? '프로그램 안내 보기' : '다음 질문 보기'}
                   </span>
                   <span className="btn-circle-arrow" aria-hidden="true">→</span>
                 </button>
@@ -704,22 +704,22 @@ function App() {
           {view.kind === 'session-info' && (
             <div className="notebook-page-content session-info-page">
               <div className="session-info-header">
-                <span className="contact-step-tag">05 · EXPERIENCE PROGRAM</span>
-                <p className="session-info-kicker">체험 프로그램</p>
+                <span className="contact-step-tag">05 · 프로그램 안내</span>
+                <p className="session-info-kicker">60분 체험 프로그램</p>
                 <h1 id="session-info-title" ref={headingRef} tabIndex={-1} className="session-info-title">
-                  “당신의 하루를 들려주세요.”
+                  60분 동안 내 하루를 함께 살펴봐요.
                 </h1>
-                <p className="session-info-summary">60분 오프라인 1:1 LIFE SESSION</p>
-                <p className="session-info-principle">처음부터 루틴을 판매하지 않습니다.<br />한 사람과 한 시간 동안 이야기를 나눕니다.</p>
+                <p className="session-info-summary">직접 만나 1:1로 진행합니다.</p>
+                <p className="session-info-principle">정해진 행동을 권하지 않습니다.<br />요즘 생활을 먼저 듣고, 지금 시작할 행동을 함께 찾습니다.</p>
               </div>
 
-              <ol className="session-timeline" aria-label="LIFE SESSION 진행 순서">
+              <ol className="session-timeline" aria-label="60분 체험 프로그램 진행 순서">
                 {[
-                  ['10분', '나의 하루', '요즘 어떻게 살고 있는지 이야기합니다.'],
-                  ['15분', '나의 이야기', '성격 · 경험 · 좋아하는 것 · 싫어하는 것 · 가치관'],
-                  ['15분', '내가 원하는 변화', '꿈 · 목표 · 바꾸고 싶은 것'],
-                  ['10분', '생활 패턴 발견', '반복되는 행동과 방해 요인을 함께 찾습니다.'],
-                  ['10분', '첫 번째 루틴', '당장 시작할 수 있는 행동 1~3개를 함께 정합니다.'],
+                  ['10분', '현재 하루 살펴보기', '요즘 하루를 어떻게 보내는지 이야기해요.'],
+                  ['15분', '내 이야기 나누기', '좋아하는 것, 싫어하는 것과 중요하게 생각하는 것을 이야기해요.'],
+                  ['15분', '바꾸고 싶은 점 정하기', '지금 바꾸고 싶은 생활을 정해요.'],
+                  ['10분', '반복되는 습관 찾기', '자주 반복되는 행동과 방해되는 것을 찾아요.'],
+                  ['10분', '첫 행동 정하기', '오늘부터 시작할 행동 1~3개를 함께 정해요.'],
                 ].map(([time, title, description]) => (
                   <li className="session-timeline-item" key={title}>
                     <span className="session-time-badge">{time}</span>
@@ -731,10 +731,10 @@ function App() {
                 ))}
               </ol>
 
-              <p className="session-followup-note">그리고 일주일 후 다시 만납니다.</p>
+              <p className="session-followup-note">첫 만남 7일 뒤, 해본 내용을 함께 확인합니다.</p>
 
               <div className="question-actions-bar">
-                <button className="notebook-secondary-btn" onClick={goBack} type="button">← 습관 순위로</button>
+                <button className="notebook-secondary-btn" onClick={goBack} type="button">← 습관 선택으로 돌아가기</button>
                 <button className="notebook-primary-btn notebook-primary-btn--compact" onClick={beginApplication} type="button">
                   <span className="btn-label-text">신청 정보 입력하기</span>
                   <span className="btn-circle-arrow" aria-hidden="true">→</span>
@@ -749,12 +749,12 @@ function App() {
           {view.kind === 'contact' && (
             <div className="notebook-page-content contact-page">
               <div className="contact-page-header">
-                <span className="contact-step-tag">06 · APPLICATION</span>
+                <span className="contact-step-tag">06 · 신청</span>
                 <h1 id="contact-title" ref={headingRef} tabIndex={-1} className="contact-main-heading">
-                  LIFE SESSION을 신청해주세요.
+                  60분 체험 프로그램을 신청해 주세요.
                 </h1>
                 <p className="contact-lead-text">
-                  남겨주신 정보를 확인한 뒤 전화 또는 문자로 인터뷰 일정을 조율합니다.
+                  신청 내용을 확인한 뒤 전화 또는 문자로 가능한 날짜와 시간을 함께 정합니다.
                 </p>
               </div>
 
@@ -762,22 +762,22 @@ function App() {
                 <div className="memo-fact-item">
                   <span className="memo-icon" aria-hidden="true">📍</span>
                   <div>
-                    <strong>오프라인 1:1</strong>
-                    <span>장소는 거주지 주변 역을 참고해 조율</span>
+                    <strong>직접 만나는 1:1</strong>
+                    <span>만나기 편한 지하철역을 기준으로 장소를 정해요.</span>
                   </div>
                 </div>
                 <div className="memo-fact-item">
                   <span className="memo-icon" aria-hidden="true">⏱️</span>
                   <div>
-                    <strong>60분 인터뷰</strong>
-                    <span>하루와 변화에 관한 대화</span>
+                    <strong>60분 대화</strong>
+                    <span>요즘 생활과 바꾸고 싶은 점을 이야기해요.</span>
                   </div>
                 </div>
                 <div className="memo-fact-item">
                   <span className="memo-icon" aria-hidden="true">🔒</span>
                   <div>
-                    <strong>3개월 보관</strong>
-                    <span>신청 확인과 인터뷰 안내 목적으로만 사용</span>
+                    <strong>3개월 뒤 삭제</strong>
+                    <span>신청일부터 3개월 뒤 입력한 정보를 삭제해요.</span>
                   </div>
                 </div>
               </div>
@@ -788,7 +788,7 @@ function App() {
                     <span className="group-num-pill">01</span>
                     <div>
                       <strong className="group-title">이름 <em className="star-required">*</em></strong>
-                      <p className="group-sub">신청자 확인에 사용할 이름을 적어주세요.</p>
+                      <p className="group-sub">연락받을 분의 이름을 입력해 주세요.</p>
                     </div>
                   </div>
                   <label className="sr-only" htmlFor="display-name">이름</label>
@@ -813,7 +813,7 @@ function App() {
                       <span className="group-num-pill">02</span>
                       <div>
                         <strong className="group-title">나이 <em className="star-required">*</em></strong>
-                        <p className="group-sub">현재 나이를 숫자로 입력해주세요.</p>
+                        <p className="group-sub">현재 나이를 숫자로 입력해 주세요.</p>
                       </div>
                     </div>
                     <label className="sr-only" htmlFor="age">나이</label>
@@ -837,7 +837,7 @@ function App() {
                       <span className="group-num-pill">03</span>
                       <div>
                         <strong className="group-title">전화번호 <em className="star-required">*</em></strong>
-                        <p className="group-sub">전화 또는 문자로 일정 안내를 드립니다.</p>
+                        <p className="group-sub">가능한 날짜와 시간을 정할 때 이 번호로 전화하거나 문자를 보냅니다.</p>
                       </div>
                     </div>
                     <label className="sr-only" htmlFor="phone-number">전화번호</label>
@@ -863,11 +863,11 @@ function App() {
                   <div className="group-card-header">
                     <span className="group-num-pill">04</span>
                     <div>
-                      <strong className="group-title">거주지 주변 역 <em className="star-required">*</em></strong>
-                      <p className="group-sub">상세 주소가 아닌 만나기 편한 지하철역만 알려주세요.</p>
+                      <strong className="group-title">만나기 편한 역 <em className="star-required">*</em></strong>
+                      <p className="group-sub">만나기 편한 지하철역을 적어주세요. 상세 주소는 받지 않습니다.</p>
                     </div>
                   </div>
-                  <label className="sr-only" htmlFor="nearby-station">거주지 주변 역</label>
+                  <label className="sr-only" htmlFor="nearby-station">만나기 편한 역</label>
                   <input
                     id="nearby-station"
                     maxLength={50}
@@ -883,12 +883,12 @@ function App() {
                 </div>
 
                 <fieldset className={`form-group-card schedule-group ${contactErrorField === 'preferredDays' || contactErrorField === 'preferredPeriods' ? 'has-error' : ''}`}>
-                  <legend className="sr-only">인터뷰 가능한 요일과 시간대</legend>
+                  <legend className="sr-only">가능한 요일과 시간대</legend>
                   <div className="group-card-header">
                     <span className="group-num-pill">05</span>
                     <div>
-                      <strong className="group-title">인터뷰 가능 요일 및 시간대 <em className="star-required">*</em></strong>
-                      <p className="group-sub">가능한 항목을 모두 선택해주세요. ‘상관없음’은 단독 선택됩니다.</p>
+                      <strong className="group-title">가능한 요일과 시간대 <em className="star-required">*</em></strong>
+                      <p className="group-sub">가능한 항목을 모두 골라주세요. ‘상관없음’ 항목을 고르면 다른 항목은 선택할 수 없습니다.</p>
                     </div>
                   </div>
 
@@ -954,15 +954,15 @@ function App() {
                     <dl className="privacy-policy-list">
                       <div>
                         <dt>수집 항목</dt>
-                        <dd>이름, 나이, 전화번호, 거주지 주변 역, 인터뷰 가능 요일 및 시간대, LIFE NOTE 응답</dd>
+                        <dd>이름, 나이, 전화번호, 만나기 편한 역, 가능한 요일과 시간, 생활 질문 답변</dd>
                       </div>
                       <div>
                         <dt>수집 목적</dt>
-                        <dd>체험 프로그램 신청 접수, 참여자 확인, 인터뷰 일정 안내 및 세션 준비</dd>
+                        <dd>신청 확인, 일정 연락과 60분 대화 준비에 사용합니다.</dd>
                       </div>
                       <div>
                         <dt>보유 기간</dt>
-                        <dd>신청일로부터 3개월 후 파기</dd>
+                        <dd>신청일부터 3개월 뒤 삭제합니다.</dd>
                       </div>
                     </dl>
                   </div>
@@ -976,7 +976,7 @@ function App() {
                       required
                       type="checkbox"
                     />
-                    <span className="consent-title">[필수] 위 개인정보 수집 및 이용에 동의합니다.</span>
+                    <span className="consent-title">[필수] 개인정보 수집과 이용에 동의합니다.</span>
                   </label>
                 </div>
 
@@ -984,10 +984,10 @@ function App() {
 
                 <div className="contact-actions-bar">
                   <button className="notebook-secondary-btn" onClick={goBack} type="button">
-                    ← 프로그램 안내로
+                    ← 프로그램 안내로 돌아가기
                   </button>
                   <button className="notebook-primary-btn" disabled={submitting} type="submit">
-                    <span className="btn-label-text">{submitting ? '신청 접수하는 중…' : 'LIFE SESSION 신청하기'}</span>
+                    <span className="btn-label-text">{submitting ? '신청 내용을 보내고 있어요. 다시 누르지 마세요.' : '이 내용으로 신청하기'}</span>
                     {!submitting && <span className="btn-circle-arrow" aria-hidden="true">→</span>}
                   </button>
                 </div>
@@ -1003,47 +1003,47 @@ function App() {
               <div className="success-stamp-seal" aria-hidden="true">
                 <div className="seal-ring">
                   <span className="seal-star">✦</span>
-                  <strong className="seal-txt">기록 완료</strong>
+                  <strong className="seal-txt">신청 완료</strong>
                   <span className="seal-brand">DAYLOG 2026</span>
                 </div>
               </div>
 
               <div className="success-headline-wrap">
-                <span className="success-badge">APPLICATION RECEIVED</span>
+                <span className="success-badge">신청 완료</span>
                 <h1 id="success-title" ref={headingRef} tabIndex={-1} className="success-title">
-                  이제 직접 만나<br />함께 살펴볼게요.
+                  신청이 완료됐어요.
                 </h1>
                 <p className="success-sub">
-                  작성해주신 답변이 코치에게 전달되었습니다. 남겨주신 연락처로 확인 후 일정 조율 안내를 드리겠습니다.
+                  신청 번호를 저장해 주세요. 전화 또는 문자로 가능한 날짜와 시간을 함께 정합니다.
                 </p>
               </div>
 
               <div className="success-receipt-card">
                 <div className="receipt-row-item">
-                  <span className="receipt-item-label">신청 접수 번호</span>
+                  <span className="receipt-item-label">신청 번호</span>
                   <strong className="receipt-item-val receipt-code">{view.requestId}</strong>
                 </div>
                 <div className="receipt-row-item">
-                  <span className="receipt-item-label">신청자 호칭</span>
+                  <span className="receipt-item-label">이름</span>
                   <strong className="receipt-item-val">{contact.displayName || '신청자'}님</strong>
                 </div>
                 <div className="receipt-row-item">
-                  <span className="receipt-item-label">세션 프로그램</span>
-                  <strong className="receipt-item-val">1:1 Life Session (60분 오프라인)</strong>
+                  <span className="receipt-item-label">프로그램</span>
+                  <strong className="receipt-item-val">60분 1:1 생활 세션</strong>
                 </div>
                 <div className="receipt-row-item">
                   <span className="receipt-item-label">진행 장소</span>
-                  <strong className="receipt-item-val">상세 장소 개별 안내</strong>
+                  <strong className="receipt-item-val">연락할 때 장소를 함께 정해요.</strong>
                 </div>
                 <div className="receipt-row-item">
                   <span className="receipt-item-label">준비물</span>
-                  <strong className="receipt-item-val">가벼운 마음 (추가 준비물 없음)</strong>
+                  <strong className="receipt-item-val">준비물 없음</strong>
                 </div>
               </div>
 
               <div className="success-bottom-bar">
                 <button className="notebook-secondary-btn" onClick={restart} type="button">
-                  첫 화면(다이어리 표지)으로 돌아가기
+                  처음으로 돌아가기
                 </button>
               </div>
             </div>

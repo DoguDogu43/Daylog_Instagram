@@ -43,7 +43,7 @@ export function prepareResponse(response: ApiResponse) {
 export function requirePost(request: ApiRequest, response: ApiResponse) {
   if (request.method === 'POST') return true
   response.setHeader('Allow', 'POST')
-  response.status(405).json({ ok: false, error: '허용되지 않은 요청이에요.' })
+  response.status(405).json({ ok: false, error: '이 방법으로는 신청할 수 없어요. 신청 화면에서 다시 시도해 주세요.' })
   return false
 }
 
@@ -51,7 +51,7 @@ export function requireJson(request: ApiRequest) {
   const raw = request.headers['content-type']
   const contentType = Array.isArray(raw) ? raw[0] : raw
   if (!contentType?.toLowerCase().includes('application/json')) {
-    throw new RequestError('JSON 형식으로 보내주세요.', 415)
+    throw new RequestError('신청 내용을 확인한 뒤 다시 시도해 주세요.', 415)
   }
 }
 
@@ -60,7 +60,7 @@ export function parseBody(request: ApiRequest): Record<string, unknown> {
 
   const raw = typeof request.body === 'string' ? request.body : JSON.stringify(request.body ?? {})
   if (Buffer.byteLength(raw, 'utf8') > MAX_BODY_BYTES) {
-    throw new RequestError('요청 내용이 너무 커요.', 413)
+    throw new RequestError('신청 내용이 너무 길어요. 입력한 내용을 줄인 뒤 다시 시도해 주세요.', 413)
   }
 
   let value: unknown = request.body
@@ -68,12 +68,12 @@ export function parseBody(request: ApiRequest): Record<string, unknown> {
     try {
       value = JSON.parse(value)
     } catch {
-      throw new RequestError('JSON 형식을 확인해주세요.')
+      throw new RequestError('신청 내용을 확인한 뒤 다시 시도해 주세요.')
     }
   }
 
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new RequestError('요청 내용을 확인해주세요.')
+    throw new RequestError('신청 내용을 확인한 뒤 다시 시도해 주세요.')
   }
 
   return value as Record<string, unknown>
@@ -94,7 +94,8 @@ export function applyRateLimit(request: ApiRequest, scope: string, limit: number
 
   current.count += 1
   if (current.count > limit) {
-    throw new RequestError('요청이 너무 많아요. 잠시 후 다시 시도해주세요.', 429)
+    const waitMinutes = Math.max(1, Math.ceil(windowMs / 60_000))
+    throw new RequestError(`요청이 많아요. ${waitMinutes}분 뒤 다시 시도해 주세요.`, 429)
   }
 }
 
@@ -145,17 +146,17 @@ export async function forwardToAppsScript(payload: Record<string, unknown>): Pro
   const formType = process.env.DAYLOG_FORM_TYPE || 'daylog_life_session'
 
   if (!url || !secret || formType !== 'daylog_life_session') {
-    throw new RequestError('신청 접수 설정이 아직 완료되지 않았어요.', 503)
+    throw new RequestError('지금은 신청 기능을 사용할 수 없어요. 잠시 후 다시 시도해 주세요.', 503)
   }
 
   let parsedUrl: URL
   try {
     parsedUrl = new URL(url)
   } catch {
-    throw new RequestError('신청 접수 설정을 확인해주세요.', 503)
+    throw new RequestError('지금은 신청 기능을 사용할 수 없어요. 잠시 후 다시 시도해 주세요.', 503)
   }
   if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 'script.google.com' || !parsedUrl.pathname.endsWith('/exec')) {
-    throw new RequestError('신청 접수 설정을 확인해주세요.', 503)
+    throw new RequestError('지금은 신청 기능을 사용할 수 없어요. 잠시 후 다시 시도해 주세요.', 503)
   }
 
   const configuredTimeout = Number(process.env.APPS_SCRIPT_TIMEOUT_MS || 9000)
@@ -183,7 +184,7 @@ export async function forwardToAppsScript(payload: Record<string, unknown>): Pro
     return response
   } catch (error) {
     console.error('daylog_apps_script_forward_failed', error instanceof Error ? error.message : 'unknown')
-    throw new RequestError('지금은 이야기를 전달하기 어려워요. 잠시 후 다시 시도해주세요.', 502)
+    throw new RequestError('신청 내용을 보내지 못했어요. 입력한 내용을 확인한 뒤 다시 시도해 주세요.', 502)
   } finally {
     clearTimeout(timeout)
   }
@@ -195,5 +196,5 @@ export function handleApiError(error: unknown, response: ApiResponse) {
     return
   }
   console.error('daylog_api_error', error instanceof Error ? error.message : 'unknown')
-  response.status(500).json({ ok: false, error: '잠시 후 다시 시도해주세요.' })
+  response.status(500).json({ ok: false, error: '신청 내용을 보내지 못했어요. 입력한 내용을 확인한 뒤 다시 시도해 주세요.' })
 }

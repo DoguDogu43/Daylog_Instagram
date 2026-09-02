@@ -24,11 +24,11 @@ const PREFERRED_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'flexib
 const PREFERRED_PERIODS = ['morning', 'afternoon', 'evening', 'flexible'] as const
 
 function cleanApplication(payload: Record<string, unknown>) {
-  if (payload.action !== 'submit') throw new RequestError('신청 요청을 확인해주세요.')
+  if (payload.action !== 'submit') throw new RequestError('신청 내용을 확인한 뒤 다시 시도해 주세요.')
   const requestId = text(payload.requestId, '접수번호', 43, 43)
   const sessionId = text(payload.sessionId, '세션', 45, 45)
   if (!DAYLOG_REQUEST_ID_PATTERN.test(requestId) || !DAYLOG_SESSION_ID_PATTERN.test(sessionId)) {
-    throw new RequestError('접수 정보를 확인해주세요.')
+    throw new RequestError('신청 정보를 확인한 뒤 다시 시도해 주세요.')
   }
 
   const comfortableTime = text(payload.comfortableTime, '편안한 시간', 1, 100)
@@ -38,26 +38,26 @@ function cleanApplication(payload: Record<string, unknown>) {
   const ageText = text(String(payload.age ?? ''), '나이', 1, 3)
   const age = Number(ageText)
   if (!/^\d{1,3}$/.test(ageText) || !Number.isInteger(age) || age < 1 || age > 120) {
-    throw new RequestError('나이를 확인해주세요.')
+    throw new RequestError('나이를 1~120 사이 숫자로 입력해 주세요.')
   }
   const phoneNumber = text(payload.phoneNumber, '전화번호', 13, 13)
-  if (!/^010-\d{4}-\d{4}$/.test(phoneNumber)) throw new RequestError('전화번호 형식을 확인해주세요.')
+  if (!/^010-\d{4}-\d{4}$/.test(phoneNumber)) throw new RequestError('전화번호를 010-0000-0000 형식으로 입력해 주세요.')
   const nearbyStation = text(payload.nearbyStation, '거주지 주변 역', 1, 50)
 
-  const preferredDays = enumArray(payload.preferredDays, PREFERRED_DAYS, '인터뷰 가능 요일', 1, 7)
-  const preferredPeriods = enumArray(payload.preferredPeriods, PREFERRED_PERIODS, '인터뷰 가능 시간대', 1, 3)
-  if (preferredDays.includes('flexible') && preferredDays.length !== 1) throw new RequestError('희망 요일을 확인해주세요.')
-  if (preferredPeriods.includes('flexible') && preferredPeriods.length !== 1) throw new RequestError('희망 시간대를 확인해주세요.')
-  if (payload.privacyConsent !== true) throw new RequestError('개인정보 수집·이용 동의가 필요해요.')
+  const preferredDays = enumArray(payload.preferredDays, PREFERRED_DAYS, '가능한 요일', 1, 7)
+  const preferredPeriods = enumArray(payload.preferredPeriods, PREFERRED_PERIODS, '가능한 시간대', 1, 3)
+  if (preferredDays.includes('flexible') && preferredDays.length !== 1) throw new RequestError('‘요일 상관없음’은 다른 요일과 함께 고를 수 없어요.')
+  if (preferredPeriods.includes('flexible') && preferredPeriods.length !== 1) throw new RequestError('‘시간 상관없음’은 다른 시간대와 함께 고를 수 없어요.')
+  if (payload.privacyConsent !== true) throw new RequestError('개인정보 수집·이용 내용을 확인하고 필수 동의에 체크해 주세요.')
 
   return {
     action: 'submit',
     requestId,
     sessionId,
-    dailyRhythm: enumValue(payload.dailyRhythm, DAILY_RHYTHMS, '하루 리듬'),
+    dailyRhythm: enumValue(payload.dailyRhythm, DAILY_RHYTHMS, '하루 선택'),
     comfortableTime,
     difficultTime,
-    pastPattern: enumValue(payload.pastPattern, PAST_PATTERNS, '지속 방식'),
+    pastPattern: enumValue(payload.pastPattern, PAST_PATTERNS, '꾸준히 하기 쉬운 방법'),
     changeAreas,
     displayName: text(payload.displayName, '이름', 1, 50),
     age,
