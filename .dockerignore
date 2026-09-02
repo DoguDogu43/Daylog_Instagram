@@ -1,0 +1,12 @@
+node_modules
+dist
+server-dist
+.git
+.github
+docs
+예시본
+tests
+*.log
+.env
+.env.*
+.claude

@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+    image: daylog-web:latest
+    container_name: daylog-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 3000
+    ports:
+      - "127.0.0.1:3100:3000"
