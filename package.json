@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && tsc -p tsconfig.api.json && vite build",
+    "build:server": "tsc -p tsconfig.api.build.json",
     "lint": "eslint .",
-    "test": "node --test tests/*.test.mjs",
+    "test": "npm run build:server && node --test tests/*.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

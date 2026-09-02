@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+server-dist
 *.local
 .env
 .env.*
@@ -25,3 +26,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# test fixtures live under a dist/ dir; keep them tracked
+!tests/fixtures/dist/
+!tests/fixtures/dist/**
