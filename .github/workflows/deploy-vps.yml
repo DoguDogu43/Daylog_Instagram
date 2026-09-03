@@ -1,0 +1,56 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GAS_URL: ${{ secrets.GOOGLE_APPS_SCRIPT_URL }}
+          GAS_SECRET: ${{ secrets.GOOGLE_APPS_SCRIPT_SHARED_SECRET }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: GAS_URL,GAS_SECRET
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+            REPO_DIR=/root/daylog
+            if [ ! -d "$REPO_DIR/.git" ]; then
+              git clone https://github.com/NewEngel/Daylog_Instagram.git "$REPO_DIR"
+            fi
+            cd "$REPO_DIR"
+            git fetch origin main
+            git checkout -B deploy origin/main
+
+            if [ -z "${GAS_URL:-}" ] || [ -z "${GAS_SECRET:-}" ]; then
+              echo "::warning::GOOGLE_APPS_SCRIPT_URL or GOOGLE_APPS_SCRIPT_SHARED_SECRET is empty. The site will serve, but the application/track API returns 503 until both secrets are set in Actions secrets."
+            fi
+
+            umask 077
+            cat > .env <<EOF
+            GOOGLE_APPS_SCRIPT_URL=${GAS_URL:-}
+            GOOGLE_APPS_SCRIPT_SHARED_SECRET=${GAS_SECRET:-}
+            DAYLOG_FORM_TYPE=daylog_life_session
+            APPS_SCRIPT_TIMEOUT_MS=9000
+            EOF
+
+            docker compose up -d --build
+            sleep 3
+            code=$(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/healthz || true)
+            echo "healthz: $code"
+            test "$code" = "200"
