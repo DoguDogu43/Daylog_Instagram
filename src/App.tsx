@@ -20,7 +20,7 @@ import type {
 } from './types'
 import './App.css'
 
-const FORM_VERSION = '2026.08.8'
+const FORM_VERSION = '2026.09.1'
 const SCHEMA_VERSION = 'daylog-life-session-v3'
 const ANSWERS_STORAGE_KEY = 'daylog-life-session-answers-v8'
 
@@ -125,15 +125,14 @@ function formatPhoneNumber(value: string) {
 
 function App() {
   const [view, setView] = useState<View>({ kind: 'intro' })
-  const [pageDirection, setPageDirection] = useState<'forward' | 'backward'>('forward')
   const [answers, setAnswers] = useState<ApplicationAnswers>(loadAnswers)
   const [contact, setContact] = useState<ContactDetails>(initialContact)
   const [error, setError] = useState('')
   const [contactErrorField, setContactErrorField] = useState<ContactErrorField | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [copyStatus, setCopyStatus] = useState('')
   const [sessionId, setSessionId] = useState(() => createId('DAYLOG-S'))
   const [requestId, setRequestId] = useState(() => createId('DAYLOG'))
-  const [applicationUnlocked, setApplicationUnlocked] = useState(false)
 
   const headingRef = useRef<HTMLHeadingElement>(null)
   const displayNameRef = useRef<HTMLInputElement>(null)
@@ -144,29 +143,20 @@ function App() {
   const preferredPeriodsRef = useRef<HTMLInputElement>(null)
   const consentRef = useRef<HTMLInputElement>(null)
   const questionErrorRef = useRef<HTMLParagraphElement>(null)
-  const activeTabRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     sessionStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(answers))
   }, [answers])
 
   useEffect(() => {
-    if (view.kind !== 'intro') headingRef.current?.focus()
+    headingRef.current?.focus()
     window.scrollTo({ top: 0, behavior: 'instant' })
-    activeTabRef.current?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'auto' })
   }, [view])
 
   const questionIndex = view.kind === 'question' ? view.index : -1
-  const filledCount = [
-    answers.dailyRhythm !== undefined,
-    Boolean(answers.comfortableTime?.trim() && answers.difficultTime?.trim()),
-    answers.pastPattern !== undefined,
-    answers.changeAreas.length > 0,
-  ].filter(Boolean).length
-
-  function goToView(nextView: View, direction: 'forward' | 'backward' = 'forward') {
+  function goToView(nextView: View, _direction: 'forward' | 'backward' = 'forward') {
+    void _direction
     setError('')
-    setPageDirection(direction)
     setView(nextView)
   }
 
@@ -238,7 +228,6 @@ function App() {
   }
 
   function beginApplication() {
-    setApplicationUnlocked(true)
     goToView({ kind: 'contact' }, 'forward')
     track('application_started')
   }
@@ -331,10 +320,24 @@ function App() {
     setContact({ ...initialContact })
     setSessionId(createId('DAYLOG-S'))
     setRequestId(createId('DAYLOG'))
-    setApplicationUnlocked(false)
     setContactErrorField(null)
     setError('')
+    setCopyStatus('')
     goToView({ kind: 'intro' }, 'backward')
+  }
+
+  async function copyApplicationNumber() {
+    if (view.kind !== 'success') return
+    if (!navigator.clipboard) {
+      setCopyStatus('신청 번호를 길게 눌러 복사해 주세요.')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(view.requestId)
+      setCopyStatus('신청 번호를 복사했어요.')
+    } catch {
+      setCopyStatus('복사하지 못했어요. 신청 번호를 길게 눌러 복사해 주세요.')
+    }
   }
 
   function goToCover() {
@@ -348,7 +351,7 @@ function App() {
     legend: string,
   ) {
     return (
-      <fieldset className="question-fieldset spiral-choice-list" aria-describedby="question-description question-error">
+      <fieldset className="question-fieldset spiral-choice-list" aria-describedby={error ? 'question-description question-error' : 'question-description'}>
         <legend className="sr-only">{legend}</legend>
         {options.map((option) => {
           const isSelected = selected === option.id
@@ -407,7 +410,7 @@ function App() {
                   id="comfortable-time"
                   type="text"
                   maxLength={100}
-                  aria-describedby="comfortable-time-hint question-error"
+                  aria-describedby={error ? 'comfortable-time-hint question-error' : 'comfortable-time-hint'}
                   aria-invalid={Boolean(error && !answers.comfortableTime?.trim())}
                   aria-required="true"
                   className="clean-time-text-input"
@@ -446,7 +449,7 @@ function App() {
                   id="difficult-time"
                   type="text"
                   maxLength={100}
-                  aria-describedby="difficult-time-hint question-error"
+                  aria-describedby={error ? 'difficult-time-hint question-error' : 'difficult-time-hint'}
                   aria-invalid={Boolean(error && !answers.difficultTime?.trim())}
                   aria-required="true"
                   className="clean-time-text-input"
@@ -487,9 +490,9 @@ function App() {
     if (index === 3) {
       return (
         <div className="spiral-habit-section">
-          <fieldset className="question-fieldset habit-area-fieldset" aria-describedby="habit-selection-status question-error">
+          <fieldset className="question-fieldset habit-area-fieldset" aria-describedby={error ? 'habit-selection-status question-error' : 'habit-selection-status'}>
             <legend className="sr-only">바꾸고 싶은 생활 습관을 1개에서 3개까지 골라주세요.</legend>
-            <div className="habit-header-bar" id="habit-selection-status" aria-live="polite">
+            <div className="habit-header-bar" id="habit-selection-status">
               <span className="habit-count-tag">
                 선택한 영역 <strong>{answers.changeAreas.length} / 3</strong>
               </span>
@@ -535,89 +538,49 @@ function App() {
 
   }
 
-  // Spiral ring coils for the notebook's left-side binding
-  const spiralCoilCount = 14
-  const spiralCoils = Array.from({ length: spiralCoilCount })
-
-  // Index step tabs for clean notebook navigation
-  const navTabs = [
-    { id: 'intro', label: '표지', isUnlocked: true, targetView: { kind: 'intro' as const } },
-    { id: 'q0', label: '01 하루', isUnlocked: true, targetView: { kind: 'question' as const, index: 0 } },
-    { id: 'q1', label: '02 시간', isUnlocked: filledCount >= 1 || (view.kind === 'question' && view.index >= 1), targetView: { kind: 'question' as const, index: 1 } },
-    { id: 'q2', label: '03 방법', isUnlocked: filledCount >= 2 || (view.kind === 'question' && view.index >= 2), targetView: { kind: 'question' as const, index: 2 } },
-    { id: 'q3', label: '04 습관', isUnlocked: filledCount >= 3 || (view.kind === 'question' && view.index >= 3), targetView: { kind: 'question' as const, index: 3 } },
-    { id: 'session-info', label: '05 안내', isUnlocked: filledCount >= 4 || view.kind === 'session-info' || applicationUnlocked, targetView: { kind: 'session-info' as const } },
-    { id: 'contact', label: '06 신청', isUnlocked: applicationUnlocked || view.kind === 'contact', targetView: { kind: 'contact' as const } },
-  ]
-
-  function isTabActive(tabId: string) {
-    if (view.kind === 'intro') return tabId === 'intro'
-    if (view.kind === 'question') return tabId === `q${view.index}`
-    if (view.kind === 'session-info') return tabId === 'session-info'
-    if (view.kind === 'contact') return tabId === 'contact'
-    return false
-  }
+  const stageLabel = view.kind === 'question'
+    ? `${view.index + 1} / 4`
+    : view.kind === 'session-info'
+      ? '프로그램 안내'
+      : view.kind === 'contact'
+        ? '신청 정보'
+        : view.kind === 'success'
+          ? '신청 완료'
+          : '나만의 하루 설계'
 
   return (
-    <div className="desk-canvas">
-      {/* Top Desk Ambient Header */}
-      <header className="desk-header">
+    <div className="app-canvas">
+      <header className="app-header">
         <div className="desk-brand-group">
-          <button className="desk-brand-btn" onClick={goToCover} type="button" aria-label="작성 내용을 유지하고 노트 표지로 이동">
+          <button className="desk-brand-btn" onClick={goToCover} type="button" aria-label="작성 내용을 유지하고 시작 화면으로 이동">
             DAYLOG
           </button>
           <span className="desk-brand-sep" aria-hidden="true">/</span>
           <span className="desk-brand-title">LIFE NOTE</span>
         </div>
-
-        <div className="desk-session-tag">
-          <span className="tag-dot" aria-hidden="true" />
-          <span>나만의 하루 설계</span>
-        </div>
+        <span className="app-stage-label">{stageLabel}</span>
       </header>
 
-      {/* THE SPIRAL NOTEBOOK CONTAINER */}
-      <main className={`spiral-notebook-container view-${view.kind}`}>
-        {/* Page index tabs sit behind the paper's top edge. */}
-        <nav className="spiral-nav-tabs" aria-label="노트 페이지 이동">
-          {navTabs.map((tab) => {
-            const active = isTabActive(tab.id)
-            return (
-              <button
-                type="button"
-                key={tab.id}
-                ref={active ? activeTabRef : undefined}
-                className={`spiral-nav-tab ${active ? 'is-active' : ''} ${tab.isUnlocked ? 'is-unlocked' : 'is-locked'}`}
-                onClick={() => {
-                  if (tab.isUnlocked) {
-                    goToView(tab.targetView, 'forward')
-                  }
-                }}
-                disabled={!tab.isUnlocked}
-                aria-current={active ? 'page' : undefined}
-              >
-                <span>{tab.label}</span>
-              </button>
-            )
-          })}
-        </nav>
-
-        {/* Left Wire-O Spiral Binding Bar */}
-        <div className="spiral-binding-bar" aria-hidden="true">
-          <div className="spiral-binding-inner">
-            {spiralCoils.map((_, idx) => (
-              <div className="spiral-ring-unit" key={idx}>
-                <div className="spiral-hole" />
-                <div className="spiral-metal-ring" />
-              </div>
-            ))}
-          </div>
+      {view.kind === 'question' && (
+        <div
+          className="question-progress"
+          role="progressbar"
+          aria-label={`현재 ${view.index + 1}번째 질문, 전체 4개`}
+          aria-valuemin={1}
+          aria-valuemax={4}
+          aria-valuenow={view.index + 1}
+        >
+          {[0, 1, 2, 3].map((step) => (
+            <span
+              className={`progress-segment ${step < view.index ? 'is-complete' : step === view.index ? 'is-current' : ''}`}
+              key={step}
+              aria-hidden="true"
+            />
+          ))}
         </div>
+      )}
 
-        {/* Main Notebook Paper Sheet */}
-        <div className={`spiral-page-sheet ${pageDirection === 'forward' ? 'page-turn-forward' : 'page-turn-backward'}`}>
-          {/* Vertical Red Margin Gutter Line */}
-          <div className="notebook-red-margin" aria-hidden="true" />
+      <main className={`app-panel view-${view.kind}`}>
 
           {/* =========================================================================
               VIEW: INTRO (Cover & Introduction Page)
@@ -625,26 +588,35 @@ function App() {
           {view.kind === 'intro' && (
             <div className="notebook-page-content intro-page">
               <div className="intro-header-badge">
-                <span className="gold-star-icon" aria-hidden="true">✦</span>
-                <span>데이로그 생활 노트</span>
+                <span aria-hidden="true">✦</span>
+                <span>나만의 하루 설계</span>
               </div>
 
               <div className="intro-headline-section">
-                <h1 id="intro-title" className="intro-main-title">
+                <h1 id="intro-title" ref={headingRef} tabIndex={-1} className="intro-main-title">
                   내 생활에 맞는 습관을<br />
-                  <mark className="highlighter-text">함께 찾아봐요.</mark>
+                  함께 찾아봐요.
                 </h1>
                 <p className="intro-sub-lead">
                   데이로그는 60분 동안 직접 만나 요즘 생활을 듣고, 지금 시작할 행동 1~3개를 함께 정합니다.
                 </p>
-                <p className="intro-flow-note">4개 질문 · 약 3분 · 답변 뒤 체험 신청</p>
               </div>
 
-              {/* Intro CTA */}
+              <div className="intro-purpose-card">
+                <span className="purpose-card-icon" aria-hidden="true">◎</span>
+                <p>정답을 찾는 설문이 아니에요. 지금의 생활을 짧게 정리하고, 나에게 맞는 시작을 함께 찾아요.</p>
+              </div>
+
+              <ul className="intro-info-grid" aria-label="LIFE NOTE 진행 정보">
+                <li><span aria-hidden="true">▣</span><strong>4개 질문</strong><small>내 생활 돌아보기</small></li>
+                <li><span aria-hidden="true">◷</span><strong>약 3분</strong><small>부담 없이 시작</small></li>
+                <li><span aria-hidden="true">⌂</span><strong>대면 체험</strong><small>60분 1:1 대화</small></li>
+              </ul>
+
               <div className="intro-cta-section">
                 <button className="notebook-primary-btn" type="button" onClick={startExperience}>
-                  <span className="btn-label-text">4개 질문 시작하기</span>
-                  <span className="btn-circle-arrow" aria-hidden="true">→</span>
+                  <span className="btn-label-text">내 하루 기록 시작하기</span>
+                  <span aria-hidden="true">→</span>
                 </button>
               </div>
             </div>
@@ -668,21 +640,22 @@ function App() {
                 {renderQuestion(view.index)}
               </div>
 
-              <p
-                className={error ? 'notebook-error-msg' : 'sr-only'}
-                id="question-error"
-                ref={questionErrorRef}
-                role={error ? 'alert' : undefined}
-                aria-live="assertive"
-                tabIndex={error ? -1 : undefined}
-              >
-                {error ? `⚠️ ${error}` : '현재 입력 오류가 없습니다.'}
-              </p>
+              {error && (
+                <p
+                  className="notebook-error-msg"
+                  id="question-error"
+                  ref={questionErrorRef}
+                  role="alert"
+                  tabIndex={-1}
+                >
+                  ⚠️ {error}
+                </p>
+              )}
 
               {/* Bottom Navigation Buttons */}
               <div className="question-actions-bar">
                 <button className="notebook-secondary-btn" onClick={goBack} type="button">
-                  ← {view.index === 0 ? '표지로 돌아가기' : '이전 질문 보기'}
+                  ← {view.index === 0 ? '시작 화면으로 돌아가기' : '이전 질문 보기'}
                 </button>
                 <button
                   className="notebook-primary-btn notebook-primary-btn--compact"
@@ -722,11 +695,11 @@ function App() {
                   ['10분', '첫 행동 정하기', '오늘부터 시작할 행동 1~3개를 함께 정해요.'],
                 ].map(([time, title, description]) => (
                   <li className="session-timeline-item" key={title}>
-                    <span className="session-time-badge">{time}</span>
                     <div>
                       <strong>{title}</strong>
                       <p>{description}</p>
                     </div>
+                    <span className="session-time-badge">{time}</span>
                   </li>
                 ))}
               </ol>
@@ -783,111 +756,104 @@ function App() {
               </div>
 
               <form className="contact-form-sheet" onSubmit={submitApplication} noValidate>
-                <div className="form-group-card">
+                {error && (
+                  <p className="notebook-error-msg contact-error-summary" id="contact-error" role="alert">
+                    ⚠️ {error}
+                  </p>
+                )}
+
+                <fieldset className={`form-group-card basic-info-card ${['displayName', 'age', 'phoneNumber', 'nearbyStation'].includes(contactErrorField ?? '') ? 'has-error' : ''}`}>
+                  <legend className="sr-only">기본 정보</legend>
                   <div className="group-card-header">
                     <span className="group-num-pill">01</span>
                     <div>
-                      <strong className="group-title">이름 <em className="star-required">*</em></strong>
-                      <p className="group-sub">연락받을 분의 이름을 입력해 주세요.</p>
+                      <strong className="group-title">기본 정보 <em className="star-required">*</em></strong>
+                      <p className="group-sub">연락과 만남 장소를 정하는 데 필요한 정보예요.</p>
                     </div>
-                  </div>
-                  <label className="sr-only" htmlFor="display-name">이름</label>
-                  <input
-                    id="display-name"
-                    autoComplete="name"
-                    maxLength={50}
-                    aria-describedby={contactErrorField === 'displayName' ? 'contact-error' : undefined}
-                    aria-invalid={contactErrorField === 'displayName'}
-                    className={`notebook-text-input ${contactErrorField === 'displayName' ? 'has-error' : ''}`}
-                    onChange={(event) => updateContact({ displayName: event.target.value })}
-                    placeholder="예: 김데이"
-                    ref={displayNameRef}
-                    required
-                    value={contact.displayName}
-                  />
-                </div>
-
-                <div className="contact-fields-grid">
-                  <div className="form-group-card">
-                    <div className="group-card-header">
-                      <span className="group-num-pill">02</span>
-                      <div>
-                        <strong className="group-title">나이 <em className="star-required">*</em></strong>
-                        <p className="group-sub">현재 나이를 숫자로 입력해 주세요.</p>
-                      </div>
-                    </div>
-                    <label className="sr-only" htmlFor="age">나이</label>
-                    <input
-                      id="age"
-                      aria-describedby={contactErrorField === 'age' ? 'contact-error' : undefined}
-                      aria-invalid={contactErrorField === 'age'}
-                      className={`notebook-text-input ${contactErrorField === 'age' ? 'has-error' : ''}`}
-                      inputMode="numeric"
-                      maxLength={3}
-                      onChange={(event) => updateContact({ age: event.target.value.replace(/\D/g, '').slice(0, 3) })}
-                      placeholder="예: 29"
-                      ref={ageRef}
-                      required
-                      value={contact.age}
-                    />
                   </div>
 
-                  <div className="form-group-card">
-                    <div className="group-card-header">
-                      <span className="group-num-pill">03</span>
-                      <div>
-                        <strong className="group-title">전화번호 <em className="star-required">*</em></strong>
-                        <p className="group-sub">가능한 날짜와 시간을 정할 때 이 번호로 전화하거나 문자를 보냅니다.</p>
-                      </div>
+                  <div className="contact-fields-grid">
+                    <div className="field-block">
+                      <label className="field-label" htmlFor="display-name">이름</label>
+                      <input
+                        id="display-name"
+                        autoComplete="name"
+                        maxLength={50}
+                        aria-describedby={contactErrorField === 'displayName' ? 'contact-display-name-error' : undefined}
+                        aria-invalid={contactErrorField === 'displayName'}
+                        className={`notebook-text-input ${contactErrorField === 'displayName' ? 'has-error' : ''}`}
+                        onChange={(event) => updateContact({ displayName: event.target.value })}
+                        placeholder="예: 김데이"
+                        ref={displayNameRef}
+                        required
+                        value={contact.displayName}
+                      />
+                      {contactErrorField === 'displayName' && <p className="field-error" id="contact-display-name-error">{error}</p>}
                     </div>
-                    <label className="sr-only" htmlFor="phone-number">전화번호</label>
-                    <input
-                      id="phone-number"
-                      autoComplete="tel"
-                      aria-describedby={contactErrorField === 'phoneNumber' ? 'contact-error' : 'phone-format-help'}
-                      aria-invalid={contactErrorField === 'phoneNumber'}
-                      className={`notebook-text-input ${contactErrorField === 'phoneNumber' ? 'has-error' : ''}`}
-                      inputMode="tel"
-                      maxLength={13}
-                      onChange={(event) => updateContact({ phoneNumber: formatPhoneNumber(event.target.value) })}
-                      placeholder="010-0000-0000"
-                      ref={phoneNumberRef}
-                      required
-                      value={contact.phoneNumber}
-                    />
-                    <small className="field-format-help" id="phone-format-help">숫자를 입력하면 하이픈이 자동으로 들어갑니다.</small>
-                  </div>
-                </div>
 
-                <div className="form-group-card">
-                  <div className="group-card-header">
-                    <span className="group-num-pill">04</span>
-                    <div>
-                      <strong className="group-title">만나기 편한 역 <em className="star-required">*</em></strong>
-                      <p className="group-sub">만나기 편한 지하철역을 적어주세요. 상세 주소는 받지 않습니다.</p>
+                    <div className="field-block">
+                      <label className="field-label" htmlFor="age">나이</label>
+                      <input
+                        id="age"
+                        aria-describedby={contactErrorField === 'age' ? 'contact-age-error' : undefined}
+                        aria-invalid={contactErrorField === 'age'}
+                        className={`notebook-text-input ${contactErrorField === 'age' ? 'has-error' : ''}`}
+                        inputMode="numeric"
+                        maxLength={3}
+                        onChange={(event) => updateContact({ age: event.target.value.replace(/\D/g, '').slice(0, 3) })}
+                        placeholder="예: 29"
+                        ref={ageRef}
+                        required
+                        value={contact.age}
+                      />
+                      {contactErrorField === 'age' && <p className="field-error" id="contact-age-error">{error}</p>}
+                    </div>
+
+                    <div className="field-block">
+                      <label className="field-label" htmlFor="phone-number">전화번호</label>
+                      <input
+                        id="phone-number"
+                        autoComplete="tel"
+                        aria-describedby={contactErrorField === 'phoneNumber' ? 'phone-format-help contact-phone-error' : 'phone-format-help'}
+                        aria-invalid={contactErrorField === 'phoneNumber'}
+                        className={`notebook-text-input ${contactErrorField === 'phoneNumber' ? 'has-error' : ''}`}
+                        inputMode="tel"
+                        maxLength={13}
+                        onChange={(event) => updateContact({ phoneNumber: formatPhoneNumber(event.target.value) })}
+                        placeholder="010-0000-0000"
+                        ref={phoneNumberRef}
+                        required
+                        value={contact.phoneNumber}
+                      />
+                      <small className="field-format-help" id="phone-format-help">숫자를 입력하면 하이픈이 자동으로 들어갑니다.</small>
+                      {contactErrorField === 'phoneNumber' && <p className="field-error" id="contact-phone-error">{error}</p>}
+                    </div>
+
+                    <div className="field-block">
+                      <label className="field-label" htmlFor="nearby-station">만나기 편한 역</label>
+                      <input
+                        id="nearby-station"
+                        maxLength={50}
+                        aria-describedby={contactErrorField === 'nearbyStation' ? 'contact-station-error' : undefined}
+                        aria-invalid={contactErrorField === 'nearbyStation'}
+                        className={`notebook-text-input ${contactErrorField === 'nearbyStation' ? 'has-error' : ''}`}
+                        onChange={(event) => updateContact({ nearbyStation: event.target.value })}
+                        placeholder="예: 2호선 성수역"
+                        ref={nearbyStationRef}
+                        required
+                        value={contact.nearbyStation}
+                      />
+                      {contactErrorField === 'nearbyStation' && <p className="field-error" id="contact-station-error">{error}</p>}
                     </div>
                   </div>
-                  <label className="sr-only" htmlFor="nearby-station">만나기 편한 역</label>
-                  <input
-                    id="nearby-station"
-                    maxLength={50}
-                    aria-describedby={contactErrorField === 'nearbyStation' ? 'contact-error' : undefined}
-                    aria-invalid={contactErrorField === 'nearbyStation'}
-                    className={`notebook-text-input ${contactErrorField === 'nearbyStation' ? 'has-error' : ''}`}
-                    onChange={(event) => updateContact({ nearbyStation: event.target.value })}
-                    placeholder="예: 2호선 성수역"
-                    ref={nearbyStationRef}
-                    required
-                    value={contact.nearbyStation}
-                  />
-                </div>
+                </fieldset>
 
                 <fieldset className={`form-group-card schedule-group ${contactErrorField === 'preferredDays' || contactErrorField === 'preferredPeriods' ? 'has-error' : ''}`}>
                   <legend className="sr-only">가능한 요일과 시간대</legend>
                   <div className="group-card-header">
-                    <span className="group-num-pill">05</span>
+                    <span className="group-num-pill">02</span>
                     <div>
-                      <strong className="group-title">가능한 요일과 시간대 <em className="star-required">*</em></strong>
+                    <strong className="group-title">가능한 일정 <em className="star-required">*</em></strong>
                       <p className="group-sub">가능한 항목을 모두 골라주세요. ‘상관없음’ 항목을 고르면 다른 항목은 선택할 수 없습니다.</p>
                     </div>
                   </div>
@@ -901,6 +867,8 @@ function App() {
                           <label className={`choice-chip-btn ${isSelected ? 'is-selected' : ''}`} key={option.id}>
                             <input
                               checked={isSelected}
+                              aria-describedby={contactErrorField === 'preferredDays' ? 'contact-days-error' : undefined}
+                              aria-invalid={contactErrorField === 'preferredDays'}
                               onChange={() => updateContact({
                                 preferredDays: toggleExclusive<PreferredDay>(contact.preferredDays, option.id, 'flexible'),
                               })}
@@ -912,6 +880,7 @@ function App() {
                         )
                       })}
                     </div>
+                    {contactErrorField === 'preferredDays' && <p className="field-error" id="contact-days-error">{error}</p>}
                   </div>
 
                   <div className="schedule-picker-section">
@@ -923,6 +892,8 @@ function App() {
                           <label className={`choice-chip-btn ${isSelected ? 'is-selected' : ''}`} key={option.id}>
                             <input
                               checked={isSelected}
+                              aria-describedby={contactErrorField === 'preferredPeriods' ? 'contact-periods-error' : undefined}
+                              aria-invalid={contactErrorField === 'preferredPeriods'}
                               onChange={() => updateContact({
                                 preferredPeriods: toggleExclusive<PreferredPeriod>(contact.preferredPeriods, option.id, 'flexible'),
                               })}
@@ -934,6 +905,7 @@ function App() {
                         )
                       })}
                     </div>
+                    {contactErrorField === 'preferredPeriods' && <p className="field-error" id="contact-periods-error">{error}</p>}
                   </div>
                 </fieldset>
 
@@ -949,6 +921,13 @@ function App() {
                 </label>
 
                 <div className={`privacy-consent-card ${contactErrorField === 'privacyConsent' ? 'has-error' : ''}`}>
+                  <div className="group-card-header">
+                    <span className="group-num-pill">03</span>
+                    <div>
+                      <strong className="group-title">개인정보 동의 <em className="star-required">*</em></strong>
+                      <p className="group-sub">수집 내용과 보유 기간을 확인해 주세요.</p>
+                    </div>
+                  </div>
                   <div className="privacy-policy-copy">
                     <strong className="consent-title">개인정보 수집 및 이용 안내</strong>
                     <dl className="privacy-policy-list">
@@ -969,7 +948,7 @@ function App() {
                   <label className="consent-checkbox-label consent-checkbox-label--boxed">
                     <input
                       checked={contact.privacyConsent}
-                      aria-describedby={contactErrorField === 'privacyConsent' ? 'contact-error' : undefined}
+                      aria-describedby={contactErrorField === 'privacyConsent' ? 'contact-privacy-error' : undefined}
                       aria-invalid={contactErrorField === 'privacyConsent'}
                       onChange={(event) => updateContact({ privacyConsent: event.target.checked })}
                       ref={consentRef}
@@ -978,9 +957,8 @@ function App() {
                     />
                     <span className="consent-title">[필수] 개인정보 수집과 이용에 동의합니다.</span>
                   </label>
+                  {contactErrorField === 'privacyConsent' && <p className="field-error" id="contact-privacy-error">{error}</p>}
                 </div>
-
-                {error && <p className="notebook-error-msg" id="contact-error" role="alert" aria-live="polite">⚠️ {error}</p>}
 
                 <div className="contact-actions-bar">
                   <button className="notebook-secondary-btn" onClick={goBack} type="button">
@@ -1001,11 +979,7 @@ function App() {
           {view.kind === 'success' && (
             <div className="notebook-page-content success-page">
               <div className="success-stamp-seal" aria-hidden="true">
-                <div className="seal-ring">
-                  <span className="seal-star">✦</span>
-                  <strong className="seal-txt">신청 완료</strong>
-                  <span className="seal-brand">DAYLOG 2026</span>
-                </div>
+                <span className="success-check">✓</span>
               </div>
 
               <div className="success-headline-wrap">
@@ -1021,7 +995,10 @@ function App() {
               <div className="success-receipt-card">
                 <div className="receipt-row-item">
                   <span className="receipt-item-label">신청 번호</span>
-                  <strong className="receipt-item-val receipt-code">{view.requestId}</strong>
+                  <div className="receipt-code-group">
+                    <strong className="receipt-item-val receipt-code">{view.requestId}</strong>
+                    <button className="receipt-copy-btn" type="button" onClick={copyApplicationNumber}>신청 번호 복사</button>
+                  </div>
                 </div>
                 <div className="receipt-row-item">
                   <span className="receipt-item-label">이름</span>
@@ -1041,6 +1018,8 @@ function App() {
                 </div>
               </div>
 
+              <p className="copy-status" aria-live="polite">{copyStatus}</p>
+
               <div className="success-bottom-bar">
                 <button className="notebook-secondary-btn" onClick={restart} type="button">
                   처음으로 돌아가기
@@ -1048,7 +1027,6 @@ function App() {
               </div>
             </div>
           )}
-        </div>
       </main>
     </div>
   )
