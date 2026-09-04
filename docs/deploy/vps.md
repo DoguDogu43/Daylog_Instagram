@@ -1,6 +1,6 @@
 # 데이로그 신청폼 — VPS 배포 절차
 
-대상: `115.71.239.106`, 도메인 `daylog.hannah-log.site`, 컨테이너 포트 `127.0.0.1:3100:3000`.
+대상: `115.71.239.106`, 도메인 `daylog.hannah-log.site`, 컨테이너 포트 `127.0.0.1:3101:3000`.
 
 ## 0. 사전 조건 (사용자)
 
@@ -36,7 +36,7 @@ APPS_SCRIPT_TIMEOUT_MS=9000
 cd /root/daylog
 docker compose up -d --build
 docker compose ps
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3100/healthz   # 200
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3101/healthz   # 200
 ```
 
 ## 4. nginx 서버블록 (`/etc/nginx/conf.d/daylog.conf`)
@@ -49,7 +49,7 @@ server {
     listen [::]:80;
     server_name daylog.hannah-log.site;
     location / {
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:3101;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -70,7 +70,7 @@ certbot --nginx -d daylog.hannah-log.site
 certbot 이 443 ssl 블록과 80→443 리다이렉트를 자동 삽입한다. 발급 후 `/etc/nginx/conf.d/daylog.conf` 의 **443 `location /`** 블록에 아래 헤더가 포함돼 있는지 확인(없으면 추가):
 
 ```nginx
-        proxy_pass http://127.0.0.1:3100;
+        proxy_pass http://127.0.0.1:3101;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
